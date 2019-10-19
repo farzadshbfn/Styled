@@ -299,7 +299,7 @@ public protocol StyledColorScheme {
 	func color(for styledColor: StyledColor) -> UIColor?
 }
 
-// MARK:- StyledAssetsCatalog
+// MARK:- StyledColorAssetsCatalog
 /// Will fetch `StyledColor`s from Assets Catalog
 ///
 /// - Note: if `StyledColor.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d` will look for `a.b.c`
@@ -307,12 +307,14 @@ public protocol StyledColorScheme {
 ///
 /// - SeeAlso: `StyledColor(named:,bundle:)`
 @available(iOS 11, *)
-public struct StyledAssetsCatalog: StyledColorScheme {
+public struct StyledColorAssetsCatalog: StyledColorScheme {
 	
 	/// - Note: **Do not** Call this method directly
 	///
 	/// - Parameter styledColor: `StyledColor`
 	public func color(for styledColor: StyledColor) -> UIColor? { .named(styledColor.description, in: nil) }
+	
+	public init() { }
 }
 
 extension StyledColor {
@@ -339,7 +341,7 @@ extension UIColor {
 	/// - Parameter styledColorName: `String` name of the `StyledColor` (mostly it's description"
 	/// - Parameter bundle: `Bundle` to look into it's Assets Catalog
 	@available(iOS 11, *)
-	fileprivate static func named(_ styledColorName: String, in bundle: Bundle?) -> UIColor? {
+	fileprivate class func named(_ styledColorName: String, in bundle: Bundle?) -> UIColor? {
 		guard StyledColor.isPrefixMatchingEnabled else {
 			return UIColor(named: styledColorName, in: bundle, compatibleWith: nil)
 		}
@@ -365,7 +367,7 @@ extension UIColor {
 	/// Will fetch `UIColor` defined in current `Styled.colorScheme`
 	///
 	/// - Parameter styledColor: `StyledColor`
-	public static func styled(_ styledColor: StyledColor, from scheme: StyledColorScheme = Styled.colorScheme) -> UIColor? {
+	public class func styled(_ styledColor: StyledColor, from scheme: StyledColorScheme = Styled.colorScheme) -> UIColor? {
 		styledColor.resolve(from: scheme)
 	}
 	
@@ -389,5 +391,73 @@ extension UIColor {
 					   green: col1.g * perc + col2.g * percComp,
 					   blue:  col1.b * perc + col2.b * percComp,
 					   alpha: col1.a * perc + col2.a * percComp)
+	}
+}
+
+// MARK:- StyledWrapper
+extension StyledWrapper {
+	
+	private func update(_ styledColor: StyledColor?, _ apply: @escaping (Base, UIColor?) -> Void) -> StyledUpdate<StyledColor>? {
+		guard let styledColor = styledColor else { return nil }
+		let styledUpdate = StyledUpdate(value: styledColor) { [weak base] in
+			guard let base = base else { return () }
+			return apply(base, styledColor.resolve(from: Styled.colorScheme))
+		}
+		styledUpdate.update()
+		return styledUpdate
+	}
+	
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	///
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	///
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> StyledColor? {
+		get { styled.colors[keyPath]?.value }
+		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
+	}
+	
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	///
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	///
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> StyledColor? {
+		get { styled.colors[keyPath]?.value }
+		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+	}
+	
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	///
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	///
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> StyledColor? {
+		get { styled.colors[keyPath]?.value }
+		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.cgColor : () } }
+	}
+	
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	///
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	///
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor?>) -> StyledColor? {
+		get { styled.colors[keyPath]?.value }
+		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
+	}
+	
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	///
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	///
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> StyledColor? {
+		get { styled.colors[keyPath]?.value }
+		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.ciColor : () } }
+	}
+	
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	///
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	///
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor?>) -> StyledColor? {
+		get { styled.colors[keyPath]?.value }
+		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
 }

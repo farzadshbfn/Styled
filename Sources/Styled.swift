@@ -24,11 +24,26 @@ public final class Styled {
 		didSet { NotificationCenter.default.post(name: colorSchemeDidChangeNotification, object: nil) }
 	}
 	
+	/// Notification will be posted when `ImageScheme` changes
+	/// When notification is raised, read `imageScheme` value
+	public static let imageSchemeDidChangeNotification = Notification.Name(rawValue: "StyledImageSchemeDidChangeNotification")
+	
+	/// Defines current `ImageScheme` used
+	///
+	/// - Note: Will post `ImageSchemeDidChangeNotification` notification when changed
+	/// - Note: re-setting the same `imageScheme` will trigger the notification.
+	public static var imageScheme: StyledImageScheme! = nil {
+		didSet { NotificationCenter.default.post(name: imageSchemeDidChangeNotification, object: nil) }
+	}
+	
 	/// Will hold Observers for defined Notifications
 	var observers: [NSObjectProtocol] = []
 	
 	/// Will hold `KeyPath`s and `Update` instances to update colors when needed
 	var colors: [AnyKeyPath: Update<StyledColor>] = [:]
+	
+	/// Will hold `KeyPath`s and `Update` instances to update images when needed
+	var images: [AnyKeyPath: Update<StyledImage>] = [:]
 	
 	/// Creates an Styled class
 	///
@@ -37,18 +52,27 @@ public final class Styled {
 	public init() {
 		let center = NotificationCenter.default
 		self.observers = [
-			center.addObserver(forName: Self.colorSchemeDidChangeNotification,
+			center.addObserver(forName: Styled.colorSchemeDidChangeNotification,
 							   object: nil,
 							   queue: .main,
-							   using: { [weak self] _ in self?.applyColors() })
+							   using: { [weak self] _ in self?.applyColors() }),
+			center.addObserver(forName: Styled.imageSchemeDidChangeNotification,
+							   object: nil,
+							   queue: .main,
+							   using: { [weak self] _ in self?.applyImages() })
 		]
 	}
 	
 	deinit { observers.forEach { NotificationCenter.default.removeObserver($0) } }
 	
 	/// Calling this method, will update all colors associated with `styled`
-	@objc public func applyColors() {
+	@objc func applyColors() {
 		DispatchQueue.main.async { self.colors.values.forEach { $0.update() } }
+	}
+	
+	/// Calling this method, will update all images associated with `styled`
+	@objc func applyImages() {
+		DispatchQueue.main.async { self.images.values.forEach { $0.update() } }
 	}
 }
 
@@ -77,43 +101,12 @@ private var associatedStyledHolder: Int8 = 0
 	///
 	/// - Parameter base: Base object
 	init(base: Base) { self.base = base }
-}
-
-// MARK:- Color
-extension StyledWrapper {
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
-		set {
-			guard let value = newValue else { return styled.colors[keyPath] = nil }
-			let styledUpdate = StyledUpdate(value: value) { [weak base] in
-				guard let color = value.resolve(from: Styled.colorScheme) else { return }
-				base?[keyPath: keyPath] = color
-			}
-			styled.colors[keyPath] = styledUpdate
-			styledUpdate.update()
-		}
-	}
+	/// Calling this method, will update all colors associated with `styled`
+	public func applyColors() { styled.applyColors() }
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
-		set {
-			guard let value = newValue else { return styled.colors[keyPath] = nil }
-			let styledUpdate = StyledUpdate(value: value) { [weak base] in
-				base?[keyPath: keyPath] = value.resolve(from: Styled.colorScheme)
-			}
-			styled.colors[keyPath] = styledUpdate
-			styledUpdate.update()
-		}
-	}
+	/// Calling this method, will update all images associated with `styled`
+	public func applyImages() { styled.applyImages() }
 }
 
 // MARK:- StyledUpdate
@@ -146,8 +139,6 @@ extension NSObject: StyledCompatible { }
 extension Styled {
 	typealias Color = StyledColor
 	typealias ColorScheme = StyledColorScheme
-	@available(iOS 11, *)
-	typealias AssetsCatalog = StyledAssetsCatalog
 	
 	typealias Update = StyledUpdate
 }
