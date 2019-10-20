@@ -20,9 +20,9 @@ import class UIKit.UIColor
 /// Sample usage:
 ///
 /// 	extension StyledColor {
-/// 	    static let primary  = Self(named: "primary")
-/// 	    static let primary1 = Self(named: "primary.lvl1")
-/// 	    static let primary2 = Self(named: "primary.lvl2")
+/// 	    static let primary  = Self("primary")
+/// 	    static let primary1 = Self("primary.lvl1")
+/// 	    static let primary2 = Self("primary.lvl2")
 /// 	}
 ///
 /// `StyledColor` uses custom pattern-matchin.  in the example given, `primary2` would match
@@ -54,8 +54,8 @@ public struct StyledColor: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	///
 	/// - Note: Make sure to follow **dot.case** format for naming Colors
 	///
-	/// - Parameter named: Name of the color.
-	public init(named name: String) {
+	/// - Parameter name: Name of the color.
+	public init(_ name: String) {
 		self.description = name
 		lazyColor = nil
 	}
@@ -69,7 +69,7 @@ public struct StyledColor: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	///
 	///  Samples:
 	///
-	/// 	StyledColor(named: "primary")
+	/// 	StyledColor("primary")
 	/// 	// description: "primary"
 	/// 	StyledColor.blending(.primary, 0.30, .secondary)
 	/// 	// description: "(primary(0.30),secondary(0.70))"
@@ -90,7 +90,7 @@ public struct StyledColor: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// 	}
 	///
 	/// - Parameter value: `String`
-	public init(stringLiteral value: Self.StringLiteralType) { self.init(named: value) }
+	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
 	
 	/// Enables the pattern-matcher (i.e switch-statement) to patch `primary.lvl1` with `primary` if `primary.lvl1` is not available
 	/// in the switch-statement
@@ -305,7 +305,7 @@ public protocol StyledColorScheme {
 /// - Note: if `StyledColor.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d` will look for `a.b.c`
 /// and if `a.b.c` is failed to be loaded, will look for `a.b` and so on. Will return `nil` if nothing were found.
 ///
-/// - SeeAlso: `StyledColor(named:,bundle:)`
+/// - SeeAlso: `StyledColor(_:,bundle:)`
 @available(iOS 11, *)
 public struct StyledColorAssetsCatalog: StyledColorScheme {
 	
@@ -323,10 +323,10 @@ extension StyledColor {
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsStyledColorScheme`
 	@available(iOS 11, *)
-	public init(named name: String, bundle: Bundle) {
+	public init(_ name: String, bundle: Bundle) {
 		self.description = name
 		self.lazyColor = .init(name: "Bundle") {
-			$0.color(for: .init(named: name)) ?? UIColor.named(name, in: bundle)
+			$0.color(for: .init(name)) ?? UIColor.named(name, in: bundle)
 		}
 	}
 }

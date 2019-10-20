@@ -20,9 +20,9 @@ import class UIKit.UIImage
 /// Sample usage:
 ///
 /// 	extension StyledImage {
-/// 	    static let profile      = Self(named: "profile")
-/// 	    static let profileFill  = Self(named: "profile.fill")
-/// 	    static let profileMulti = Self(named: "profile.multi")
+/// 	    static let profile      = Self("profile")
+/// 	    static let profileFill  = Self("profile.fill")
+/// 	    static let profileMulti = Self("profile.multi")
 /// 	}
 ///
 /// `StyledImage` uses custom pattern-matchin.  in the example given, `profileMulti` would match
@@ -54,8 +54,8 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	///
 	/// - Note: Make sure to follow **dot.case** format for naming Images
 	///
-	/// - Parameter named: Name of the Image.
-	public init(named name: String) {
+	/// - Parameter name: Name of the Image.
+	public init(_ name: String) {
 		self.description = name
 		lazyImage = nil
 	}
@@ -69,7 +69,7 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	///
 	///  Samples:
 	///
-	/// 	StyledImage(named: "profile")
+	/// 	StyledImage("profile")
 	/// 	// description: "profile"
 	/// 	StyledImage.profile.transform { $0 }
 	/// 	// description:  "(t->profile)"
@@ -84,7 +84,7 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// 	}
 	///
 	/// - Parameter value: `String`
-	public init(stringLiteral value: Self.StringLiteralType) { self.init(named: value) }
+	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
 	
 	/// Enables the pattern-matcher (i.e switch-statement) to patch `profile.fill` with `profile` if `profile.fill` is not available
 	/// in the switch-statement
@@ -222,7 +222,7 @@ public protocol StyledImageScheme {
 /// - Note: if `StyledImage.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d` will look for `a.b.c`
 /// and if `a.b.c` is failed to be loaded, will look for `a.b` and so on. Will return `nil` if nothing were found.
 ///
-/// - SeeAlso: `StyledImage(named:,bundle:)`
+/// - SeeAlso: `StyledImage(_:,bundle:)`
 public struct StyledImageAssetsCatalog: StyledImageScheme {
 	
 	/// - Note: **Do not** Call this method directly
@@ -238,10 +238,10 @@ extension StyledImage {
 	/// - Parameter name: Name of the image to look-up in Assets Catalog
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsStyledImageScheme`
-	public init(named name: String, bundle: Bundle) {
+	public init(_ name: String, bundle: Bundle) {
 		self.description = name
 		self.lazyImage = .init(name: "Bundle") {
-			$0.image(for: .init(named: name)) ?? UIImage.named(name, in: bundle)
+			$0.image(for: .init(name)) ?? UIImage.named(name, in: bundle)
 		}
 	}
 }

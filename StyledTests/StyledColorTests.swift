@@ -139,7 +139,7 @@ class StyledColorTests: XCTestCase {
 	
 	@available(iOS 11, *)
 	func testAssetsCatalog() {
-		Styled.colorScheme = StyledAssetsCatalog()
+		Styled.colorScheme = StyledColorAssetsCatalog()
 		
 		expect(UIColor.styled("red.primary")) == .red
 		// lvl1 does not exist. should match to `red.primary`
@@ -152,7 +152,7 @@ class StyledColorTests: XCTestCase {
 		expect(UIColor.styled("red.primary.lvl1")).to(beNil())
 		
 		// test Bundle load
-		let color = StyledColor(named: "sampleModule.blue.primary", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
+		let color = StyledColor("sampleModule.blue.primary", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
 		expect(UIColor.styled(color)) == .blue
 	}
 }
