@@ -55,13 +55,21 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// - Note: Make sure to follow **dot.case** format for naming Images
 	///
 	/// - Parameter name: Name of the Image.
-	public init(_ name: String) {
-		self.description = name
-		lazyImage = nil
-	}
+	public init(_ name: String) { resolver = .name(name) }
 	
-	/// This type is used internally to manage transformations applied to current `StyledImage` before fetcing `UIImage`
-	let lazyImage: LazyImage?
+	/// This type is used internally to manage transformations if applied to current `StyledImage` before fetching `UIImage`
+	let resolver: Resolver
+	
+	/// Name of the `StyledImage`.
+	///
+	/// - Note: This field is optional because there might be transformations applied to this `StyledImage`, hence no specific `name` is available
+	///
+	public var name: String? {
+		switch resolver {
+		case .name(let name): return name
+		default: return nil
+		}
+	}
 	
 	/// Describes specification of `UIImage` that will be *fetched*/*generated*
 	///
@@ -72,9 +80,11 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// 	StyledImage("profile")
 	/// 	// description: "profile"
 	/// 	StyledImage.profile.transform { $0 }
-	/// 	// description:  "(t->profile)"
+	/// 	// description:  "{t->profile}"
+	/// 	StyledImage("profile", bundle: .main)
+	/// 	// description: {profile(com.farzadshbfn.styled)}
 	///
-	public let description: String
+	public var description: String { resolver.description }
 	
 	/// Ease of use on defining `StyledImage` variables
 	///
@@ -97,6 +107,24 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 }
 
 extension StyledImage {
+	
+	/// Internal type to manage Lazy or direct fetching of `UIImage`
+	enum Resolver: Hashable, CustomStringConvertible {
+		case name(String)
+		case lazy(LazyImage)
+		
+		/// Contains description of current `Resolver` state.
+		///
+		/// - Note: `LazyImage` are surrounded by `{...}`
+		///
+		var description: String {
+			switch self {
+			case .name(let name): return name
+			case .lazy(let lazy): return "{\(lazy)}"
+			}
+		}
+	}
+	
 	/// This type is used to support transformations on `StyledImage` like `Blend`
 	struct LazyImage: Hashable, CustomStringConvertible {
 		/// Is generated on `init`, to keep the type Hashable and hide `StyledImage` in order to let `StyledImage` hold `LazyImage` in its definition
@@ -135,9 +163,7 @@ extension StyledImage {
 		}
 		
 		/// - Returns: `hashValue` of given parameters when initializing `LazyImage`
-		func hash(into hasher: inout Hasher) {
-			hasher.combine(imageHashValue)
-		}
+		func hash(into hasher: inout Hasher) { hasher.combine(imageHashValue) }
 		
 		/// Is backed by `hashValue` comparision
 		static func == (lhs: LazyImage, rhs: LazyImage) -> Bool { lhs.hashValue == rhs.hashValue }
@@ -146,21 +172,21 @@ extension StyledImage {
 	/// This method is used internally to manage transformations (if any) and provide `UIImage`
 	/// - Parameter scheme:A `StyledImageScheme` to fetch `UIImage` from
 	func resolve(from scheme: StyledImageScheme) -> UIImage? {
-		lazyImage?.image(scheme) ?? scheme.image(for: self)
+		switch resolver {
+		case .name: return scheme.image(for: self)
+		case .lazy(let lazy): return lazy.image(scheme)
+		}
 	}
 	
 	/// Enables `StyledImage` to accept transformations
 	/// - Parameter lazyImage: `LazyImage` instance
-	init(lazyImage: LazyImage) {
-		self.lazyImage = lazyImage
-		self.description = lazyImage.imageDescription
-	}
+	init(lazyImage: LazyImage) { resolver = .lazy(lazyImage) }
 	
 	/// Applies custom transformations on the `UIImage`
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIImage`
 	public func transform(named name: String = "t", _ transform: @escaping (UIImage) -> UIImage) -> StyledImage {
-		return .init(lazyImage: .init(name: "(\(name)->\(self))", { scheme in
+		return .init(lazyImage: .init(name: "\(name)->\(self)", { scheme in
 			guard let Image = self.resolve(from: scheme) else { return nil }
 			return transform(Image)
 		}))
@@ -239,10 +265,9 @@ extension StyledImage {
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsStyledImageScheme`
 	public init(_ name: String, bundle: Bundle) {
-		self.description = name
-		self.lazyImage = .init(name: "Bundle") {
+		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
 			$0.image(for: .init(name)) ?? UIImage.named(name, in: bundle)
-		}
+		})
 	}
 }
 

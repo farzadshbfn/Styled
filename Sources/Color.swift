@@ -55,32 +55,43 @@ public struct StyledColor: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// - Note: Make sure to follow **dot.case** format for naming Colors
 	///
 	/// - Parameter name: Name of the color.
-	public init(_ name: String) {
-		self.description = name
-		lazyColor = nil
-	}
+	public init(_ name: String) { resolver = .name(name) }
 	
-	/// This type is used internally to manage transformations applied to current `StyledColor` before fetcing `UIColor`
-	let lazyColor: LazyColor?
+	/// This type is used internally to manage transformations if applied to current `StyledColor` before fetching `UIColor`
+	let resolver: Resolver
+	
+	/// Name of the `StyledColor`.
+	///
+	/// - Note: This field is optional because there might be transformations applied to this `StyledColor`, hence no specific `name` is available
+	///
+	public var name: String? {
+		switch resolver {
+		case .name(let name): return name
+		default: return nil
+		}
+	}
 	
 	/// Describes specification of `UIColor` that will be *fetched*/*generated*
 	///
 	///  - Note: `StyledColor`s with transformations will not be sent to `StyledColorScheme`s directly
+	///  - Note: If description contains `{...}` it means this `StyledColor` contains transformations
 	///
 	///  Samples:
 	///
 	/// 	StyledColor("primary")
 	/// 	// description: "primary"
 	/// 	StyledColor.blending(.primary, 0.30, .secondary)
-	/// 	// description: "(primary(0.30),secondary(0.70))"
+	/// 	// description: "{primary*0.30+secondary*0.70}"
 	/// 	StyledColor.primary.blend(with: .black)
-	/// 	// description: "(primary(0.50),UIColor(0.00 0.00 0.00 0.00)(0.50))"
+	/// 	// description: "primary*0.50+UIColor(0.00 0.00 0.00 0.00)*0.50}"
 	/// 	StyledColor.opacity(0.9, of: .primary)
-	/// 	// description: "primary(0.90)"
+	/// 	// description: "{primary(0.90)}"
 	/// 	StyledColor.primary.transform { $0 }
-	/// 	// description:  "(t->primary)"
+	/// 	// description:  "{t->primary}"
+	/// 	StyledColor("primary", bundle: .main)
+	/// 	// description: {primary(com.farzadshbfn.styled)}
 	///
-	public let description: String
+	public var description: String { resolver.description }
 	
 	/// Ease of use on defining `StyledColor` variables
 	///
@@ -103,6 +114,24 @@ public struct StyledColor: Hashable, CustomStringConvertible ,ExpressibleByStrin
 }
 
 extension StyledColor {
+	
+	/// Internal type to manage Lazy or direct fetching of `UIColor`
+	enum Resolver: Hashable, CustomStringConvertible {
+		case name(String)
+		case lazy(LazyColor)
+		
+		/// Contains description of current `Resolver` state.
+		///
+		/// - Note: `LazyColor` are surrounded by `{...}`
+		///
+		var description: String {
+			switch self {
+			case .name(let name): return name
+			case .lazy(let lazy): return "{\(lazy)}"
+			}
+		}
+	}
+	
 	/// This type is used to support transformations on `StyledColor` like `Blend`
 	struct LazyColor: Hashable, CustomStringConvertible {
 		/// Is generated on `init`, to keep the type Hashable and hide `StyledColor` in order to let `StyledColor` hold `LazyColor` in its definition
@@ -148,9 +177,7 @@ extension StyledColor {
 		}
 		
 		/// - Returns: `hashValue` of given parameters when initializing `LazyColor`
-		func hash(into hasher: inout Hasher) {
-			hasher.combine(colorHashValue)
-		}
+		func hash(into hasher: inout Hasher) { hasher.combine(colorHashValue) }
 		
 		/// Is backed by `hashValue` comparision
 		static func == (lhs: LazyColor, rhs: LazyColor) -> Bool { lhs.hashValue == rhs.hashValue }
@@ -159,15 +186,15 @@ extension StyledColor {
 	/// This method is used internally to manage transformations (if any) and provide `UIColor`
 	/// - Parameter scheme:A `StyledColorScheme` to fetch `UIColor` from
 	func resolve(from scheme: StyledColorScheme) -> UIColor? {
-		lazyColor?.color(scheme) ?? scheme.color(for: self)
+		switch resolver {
+		case .name: return scheme.color(for: self)
+		case .lazy(let lazy): return lazy.color(scheme)
+		}
 	}
 	
 	/// Enables `StyledColor` to accept transformations
 	/// - Parameter lazyColor: `LazyColor` instance
-	init(lazyColor: LazyColor) {
-		self.lazyColor = lazyColor
-		self.description = lazyColor.colorDescription
-	}
+	init(lazyColor: LazyColor) { resolver = .lazy(lazyColor) }
 	
 	/// Blends `self`  to the other `LazyColor` given
 	///
@@ -177,9 +204,9 @@ extension StyledColor {
 	/// - Parameter to: Targeted `LazyColor`
 	/// - Returns: `from * perc + to * (1 - perc)`
 	func blend(_ perc: Double, _ to: LazyColor) -> StyledColor {
-		let fromDesc = "\(self)(\(String(format: "%.2f", perc)))"
-		let toDesc = "\(to)(\(String(format: "%.2f", 1 - perc)))"
-		return .init(lazyColor: .init(name: "(\(fromDesc),\(toDesc))") { scheme in
+		let fromDesc = "\(self)*\(String(format: "%.2f", perc))"
+		let toDesc = "\(to)*\(String(format: "%.2f", 1 - perc))"
+		return .init(lazyColor: .init(name: "\(fromDesc)+\(toDesc)") { scheme in
 			guard let fromUIColor = self.resolve(from: scheme) else { return to.color(scheme) }
 			guard let toUIColor = to.color(scheme) else { return fromUIColor }
 			return fromUIColor.blend(CGFloat(perc), with: toUIColor)
@@ -243,7 +270,7 @@ extension StyledColor {
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIColor`
 	public func transform(named name: String = "t", _ transform: @escaping (UIColor) -> UIColor) -> StyledColor {
-		return .init(lazyColor: .init(name: "(\(name)->\(self))", { scheme in
+		return .init(lazyColor: .init(name: "\(name)->\(self)", { scheme in
 			guard let color = self.resolve(from: scheme) else { return nil }
 			return transform(color)
 		}))
@@ -324,10 +351,9 @@ extension StyledColor {
 	/// - SeeAlso: `XcodeAssetsStyledColorScheme`
 	@available(iOS 11, *)
 	public init(_ name: String, bundle: Bundle) {
-		self.description = name
-		self.lazyColor = .init(name: "Bundle") {
+		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
 			$0.color(for: .init(name)) ?? UIColor.named(name, in: bundle)
-		}
+		})
 	}
 }
 

@@ -42,6 +42,11 @@ class StyledColorTests: XCTestCase {
 		Styled.colorScheme = nil
 	}
 	
+	func testName() {
+		expect(StyledColor.primary.name) == "primary"
+		expect(StyledColor.primary.opacity(1.00).name).to(beNil())
+	}
+	
 	func testPatternMatcherSetting() {
 		StyledColor.isPrefixMatchingEnabled = false
 		
@@ -90,11 +95,17 @@ class StyledColorTests: XCTestCase {
 		expect(StyledColor.primary.description) == "primary"
 		expect("\(StyledColor.primary)") == "primary"
 		
-		expect(StyledColor.blending(.primary, 0.3, with: .primary2).description) == "(primary(0.30),primary.lvl2(0.70))"
-		expect(StyledColor.blending(.primary, 0.3, with: UIColor.black).description) == "(primary(0.30),UIColor(0.00 0.00 0.00 1.00)(0.70))"
-		expect(StyledColor.opacity(0.4, of: .primary).description) == "primary(0.40)"
-		expect(StyledColor.transforming(.primary) { $0 }.description) == "(t->primary)"
-		expect(StyledColor.transforming(.primary, named: "custom") { $0 }.description) == "(custom->primary)"
+		expect(StyledColor.blending(.primary, 0.3, with: .primary2).description) == "{primary*0.30+primary.lvl2*0.70}"
+		expect(StyledColor.blending(.primary, 0.3, with: UIColor.black).description) == "{primary*0.30+UIColor(0.00 0.00 0.00 1.00)*0.70}"
+		expect(StyledColor.opacity(0.4, of: .primary).description) == "{primary(0.40)}"
+		expect(StyledColor.transforming(.primary) { $0 }.description) == "{t->primary}"
+		expect(StyledColor.transforming(.primary, named: "custom") { $0 }.description) == "{custom->primary}"
+		
+		if #available(iOS 11, *) {
+			expect(StyledColor("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
+			
+			expect(StyledColor("bundled", bundle: Bundle()).description) == "{bundled(bundle.not.found)}"
+		}
 	}
 	
 	func testColorLoad() {
@@ -137,22 +148,23 @@ class StyledColorTests: XCTestCase {
 		expect(UIColor.styled(.transforming("notDefined") { $0 })).to(beNil())
 	}
 	
-	@available(iOS 11, *)
 	func testAssetsCatalog() {
-		Styled.colorScheme = StyledColorAssetsCatalog()
-		
-		expect(UIColor.styled("red.primary")) == .red
-		// lvl1 does not exist. should match to `red.primary`
-		expect(UIColor.styled("red.primary.lvl1")) == .red
-		// blue does not exist at all
-		expect(UIColor.styled("blue.primary.lvl1")).to(beNil())
-		
-		StyledColor.isPrefixMatchingEnabled = false
-		// lvl1 does not exist. should NOT match to `red.primary`
-		expect(UIColor.styled("red.primary.lvl1")).to(beNil())
-		
-		// test Bundle load
-		let color = StyledColor("sampleModule.blue.primary", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
-		expect(UIColor.styled(color)) == .blue
+		if #available(iOS 11, *) {
+			Styled.colorScheme = StyledColorAssetsCatalog()
+			
+			expect(UIColor.styled("red.primary")) == .red
+			// lvl1 does not exist. should match to `red.primary`
+			expect(UIColor.styled("red.primary.lvl1")) == .red
+			// blue does not exist at all
+			expect(UIColor.styled("blue.primary.lvl1")).to(beNil())
+			
+			StyledColor.isPrefixMatchingEnabled = false
+			// lvl1 does not exist. should NOT match to `red.primary`
+			expect(UIColor.styled("red.primary.lvl1")).to(beNil())
+			
+			// test Bundle load
+			let color = StyledColor("sampleModule.blue.primary", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
+			expect(UIColor.styled(color)) == .blue
+		}
 	}
 }
