@@ -9,7 +9,7 @@ import Foundation
 import class UIKit.UIColor
 
 // MARK:- StyledColor
-/// Used to fetch color on runtime based on current Style
+/// Used to fetch color on runtime based on current `StyledColorScheme`
 ///
 /// - Important: It's important to follow **dot.case** syntax while defining name of colors. e.g `primary`, `primary.lvl1`
 /// in-order to let them be pattern-matched
@@ -24,6 +24,10 @@ import class UIKit.UIColor
 /// 	    static let primary1 = Self("primary.lvl1")
 /// 	    static let primary2 = Self("primary.lvl2")
 /// 	}
+///
+/// 	view.styled.backgroundColor = .primary
+/// 	label.styled.textColor = .opacity(0.9, of: .primary)
+/// 	layer.styled.backgroundColor = .primary
 ///
 /// `StyledColor` uses custom pattern-matchin.  in the example given, `primary2` would match
 /// with `primary` if it is checked before `primary2`:
@@ -83,13 +87,13 @@ public struct StyledColor: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// 	StyledColor.blending(.primary, 0.30, .secondary)
 	/// 	// description: "{primary*0.30+secondary*0.70}"
 	/// 	StyledColor.primary.blend(with: .black)
-	/// 	// description: "primary*0.50+UIColor(0.00 0.00 0.00 0.00)*0.50}"
+	/// 	// description: "{primary*0.50+UIColor(0.00 0.00 0.00 0.00)*0.50}"
 	/// 	StyledColor.opacity(0.9, of: .primary)
 	/// 	// description: "{primary(0.90)}"
 	/// 	StyledColor.primary.transform { $0 }
-	/// 	// description:  "{t->primary}"
+	/// 	// description: "{primary->t}"
 	/// 	StyledColor("primary", bundle: .main)
-	/// 	// description: {primary(com.farzadshbfn.styled)}
+	/// 	// description: "{primary(com.farzadshbfn.styled)}"
 	///
 	public var description: String { resolver.description }
 	
@@ -122,7 +126,7 @@ extension StyledColor {
 		
 		/// Contains description of current `Resolver` state.
 		///
-		/// - Note: `LazyColor` are surrounded by `{...}`
+		/// - Note: `LazyColor` is surrounded by `{...}`
 		///
 		var description: String {
 			switch self {
@@ -132,7 +136,7 @@ extension StyledColor {
 		}
 	}
 	
-	/// This type is used to support transformations on `StyledColor` like `Blend`
+	/// This type is used to support transformations on `StyledColor` like `.blend`
 	struct LazyColor: Hashable, CustomStringConvertible {
 		/// Is generated on `init`, to keep the type Hashable and hide `StyledColor` in order to let `StyledColor` hold `LazyColor` in its definition
 		let colorHashValue: Int
@@ -210,7 +214,7 @@ extension StyledColor {
 			guard let fromUIColor = self.resolve(from: scheme) else { return to.color(scheme) }
 			guard let toUIColor = to.color(scheme) else { return fromUIColor }
 			return fromUIColor.blend(CGFloat(perc), with: toUIColor)
-		})
+			})
 	}
 	
 	/// Blends `self` to the other `StyeledColor` given
@@ -257,7 +261,7 @@ extension StyledColor {
 	public func opacity(_ perc: Double) -> StyledColor {
 		return .init(lazyColor: .init(name: "\(self)(\(String(format: "%.2f", perc)))") { scheme in
 			self.resolve(from: scheme)?.withAlphaComponent(CGFloat(perc))
-		})
+			})
 	}
 	
 	/// Set's `opacity` level of the given `color`
@@ -270,7 +274,7 @@ extension StyledColor {
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIColor`
 	public func transform(named name: String = "t", _ transform: @escaping (UIColor) -> UIColor) -> StyledColor {
-		return .init(lazyColor: .init(name: "\(name)->\(self)", { scheme in
+		return .init(lazyColor: .init(name: "\(self)->\(name)", { scheme in
 			guard let color = self.resolve(from: scheme) else { return nil }
 			return transform(color)
 		}))
@@ -297,7 +301,7 @@ extension StyledColor {
 /// 	        switch styledColor {
 /// 	        case .primary: // return primary color
 /// 	        case .secondary: // return secondary color
-/// 	        default: fatalError("New `StyledColor` detected: \(styledColor)")
+/// 	        default: fatalError("Forgot to support \(styledColor)")
 /// 	        }
 /// 	    }
 /// 	}
@@ -306,9 +310,11 @@ public protocol StyledColorScheme {
 	
 	/// `Styled` will use this method to fetch `UIColor`
 	///
+	/// - Important: **Do not** call this method directly. use `UIColor.styled(_:)` instead.
+	///
 	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `styledColor`
 	///
-	/// - Important: **Do not** call this method directly. use `UIColor.styled(_:)` instead.
+	/// - Note: It's guaranteed all `StyledColor`s sent to this message, will contain field `name`
 	///
 	/// Sample for `DarkColorScheme`:
 	///
@@ -317,7 +323,7 @@ public protocol StyledColorScheme {
 	/// 	        switch styledColor {
 	/// 	        case .primary1: // return primary level1 color
 	/// 	        case .primary2: // return primary level2 color
-	/// 	        default: fatalError("Forgot to support primary itself")
+	/// 	        default: fatalError("Forgot to support \(styledColor)")
 	/// 	        }
 	/// 	    }
 	/// 	}
@@ -326,22 +332,25 @@ public protocol StyledColorScheme {
 	func color(for styledColor: StyledColor) -> UIColor?
 }
 
-// MARK:- StyledColorAssetsCatalog
-/// Will fetch `StyledColor`s from Assets Catalog
-///
-/// - Note: if `StyledColor.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d` will look for `a.b.c`
-/// and if `a.b.c` is failed to be loaded, will look for `a.b` and so on. Will return `nil` if nothing were found.
-///
-/// - SeeAlso: `StyledColor(_:,bundle:)`
-@available(iOS 11, *)
-public struct StyledColorAssetsCatalog: StyledColorScheme {
+// MARK:- StyledAssetCatalog
+extension UIColor {
 	
-	/// - Note: **Do not** Call this method directly
+	/// Will fetch `StyledColor`s from Assets Catalog
 	///
-	/// - Parameter styledColor: `StyledColor`
-	public func color(for styledColor: StyledColor) -> UIColor? { .named(styledColor.description, in: nil) }
-	
-	public init() { }
+	/// - Note: if `StyledColor.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
+	/// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
+	/// Will return `nil` if nothing were found.
+	///
+	/// - SeeAlso: `StyledColor(_:,bundle:)`
+	@available(iOS 11, *)
+	public struct StyledAssetCatalog: StyledColorScheme {
+		
+		public func color(for styledColor: StyledColor) -> UIColor? {
+			.named(styledColor.description, in: nil)
+		}
+		
+		public init() { }
+	}
 }
 
 extension StyledColor {
@@ -353,7 +362,7 @@ extension StyledColor {
 	public init(_ name: String, bundle: Bundle) {
 		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
 			$0.color(for: .init(name)) ?? UIColor.named(name, in: bundle)
-		})
+			})
 	}
 }
 
@@ -390,10 +399,11 @@ extension UIColor {
 		return "UIColor(\(r) \(g) \(b) \(a))"
 	}
 	
-	/// Will fetch `UIColor` defined in current `Styled.colorScheme`
+	/// Will fetch `UIColor` defined in given `StyledColorScheme`
 	///
 	/// - Parameter styledColor: `StyledColor`
-	public class func styled(_ styledColor: StyledColor, from scheme: StyledColorScheme = Styled.colorScheme) -> UIColor? {
+	/// - Parameter scheme: `StyledColorScheme` to search for color. (default: `Styled.colorScheme`)
+	open class func styled(_ styledColor: StyledColor, from scheme: StyledColorScheme = Styled.colorScheme) -> UIColor? {
 		styledColor.resolve(from: scheme)
 	}
 	
@@ -403,7 +413,7 @@ extension UIColor {
 	///
 	/// - Parameter perc: Will be clamped to `[`**0.0**, **1.0**`]`
 	/// - Parameter color: other `UIColor` to blend with. (Passing `.clear` will decrease opacity)
-	public func blend(_ perc: CGFloat = 0.5, with color: UIColor) -> UIColor {
+	open func blend(_ perc: CGFloat = 0.5, with color: UIColor) -> UIColor {
 		let perc = min(max(0.0, perc), 1.0)
 		var col1 = (r: 0.0 as CGFloat, g: 0.0 as CGFloat, b: 0.0 as CGFloat, a: 0.0 as CGFloat)
 		var col2 = (r: 0.0 as CGFloat, g: 0.0 as CGFloat, b: 0.0 as CGFloat, a: 0.0 as CGFloat)
@@ -423,9 +433,10 @@ extension UIColor {
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
-	private func update(_ styledColor: StyledColor?, _ apply: @escaping (Base, UIColor?) -> Void) -> StyledUpdate<StyledColor>? {
+	/// Internal `update` method which generates `Styled.Update` and applies the update once.
+	private func update(_ styledColor: StyledColor?, _ apply: @escaping (Base, UIColor?) -> Void) -> Styled.Update<StyledColor>? {
 		guard let styledColor = styledColor else { return nil }
-		let styledUpdate = StyledUpdate(value: styledColor) { [weak base] in
+		let styledUpdate = Styled.Update(value: styledColor) { [weak base] in
 			guard let base = base else { return () }
 			return apply(base, styledColor.resolve(from: Styled.colorScheme))
 		}
@@ -433,54 +444,54 @@ extension StyledWrapper {
 		return styledUpdate
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> StyledColor? {
 		get { styled.colors[keyPath]?.value }
 		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> StyledColor? {
 		get { styled.colors[keyPath]?.value }
 		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> StyledColor? {
 		get { styled.colors[keyPath]?.value }
 		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.cgColor : () } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor?>) -> StyledColor? {
 		get { styled.colors[keyPath]?.value }
 		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> StyledColor? {
 		get { styled.colors[keyPath]?.value }
 		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.ciColor : () } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `ColorScheme` for given `StyledColor`.
+	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ColorScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor?>) -> StyledColor? {
 		get { styled.colors[keyPath]?.value }

@@ -98,8 +98,8 @@ class StyledColorTests: XCTestCase {
 		expect(StyledColor.blending(.primary, 0.3, with: .primary2).description) == "{primary*0.30+primary.lvl2*0.70}"
 		expect(StyledColor.blending(.primary, 0.3, with: UIColor.black).description) == "{primary*0.30+UIColor(0.00 0.00 0.00 1.00)*0.70}"
 		expect(StyledColor.opacity(0.4, of: .primary).description) == "{primary(0.40)}"
-		expect(StyledColor.transforming(.primary) { $0 }.description) == "{t->primary}"
-		expect(StyledColor.transforming(.primary, named: "custom") { $0 }.description) == "{custom->primary}"
+		expect(StyledColor.transforming(.primary) { $0 }.description) == "{primary->t}"
+		expect(StyledColor.transforming(.primary, named: "custom") { $0 }.description) == "{primary->custom}"
 		
 		if #available(iOS 11, *) {
 			expect(StyledColor("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
@@ -150,7 +150,7 @@ class StyledColorTests: XCTestCase {
 	
 	func testAssetsCatalog() {
 		if #available(iOS 11, *) {
-			Styled.colorScheme = StyledColorAssetsCatalog()
+			Styled.colorScheme = UIColor.StyledAssetCatalog()
 			
 			expect(UIColor.styled("red.primary")) == .red
 			// lvl1 does not exist. should match to `red.primary`

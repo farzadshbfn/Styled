@@ -9,7 +9,7 @@ import Foundation
 import class UIKit.UIImage
 
 // MARK:- StyledImage
-/// Used to fetch Image on runtime based on current Style
+/// Used to fetch Image on runtime based on current `StyledImageScheme`
 ///
 /// - Important: It's important to follow **dot.case** syntax while defining name of Images. e.g `profile`, `profile.fill`
 /// in-order to let them be pattern-matched
@@ -24,6 +24,9 @@ import class UIKit.UIImage
 /// 	    static let profileFill  = Self("profile.fill")
 /// 	    static let profileMulti = Self("profile.multi")
 /// 	}
+///
+/// 	imageView.styled.image = .profile
+/// 	imageView.styled.image = .renderingMode(.alwaysTemplate, of: .profile)
 ///
 /// `StyledImage` uses custom pattern-matchin.  in the example given, `profileMulti` would match
 /// with `profile` if it is checked before `profileMulti`:
@@ -80,9 +83,11 @@ public struct StyledImage: Hashable, CustomStringConvertible ,ExpressibleByStrin
 	/// 	StyledImage("profile")
 	/// 	// description: "profile"
 	/// 	StyledImage.profile.transform { $0 }
-	/// 	// description:  "{t->profile}"
+	/// 	// description:  "{profile->t}"
+	/// 	StyledImage.profile.renderingMode(.alwaysTemplate)
+	/// 	// description: "profile(alwaysTemplate)"
 	/// 	StyledImage("profile", bundle: .main)
-	/// 	// description: {profile(com.farzadshbfn.styled)}
+	/// 	// description: "{profile(com.farzadshbfn.styled)}"
 	///
 	public var description: String { resolver.description }
 	
@@ -115,7 +120,7 @@ extension StyledImage {
 		
 		/// Contains description of current `Resolver` state.
 		///
-		/// - Note: `LazyImage` are surrounded by `{...}`
+		/// - Note: `LazyImage` is surrounded by `{...}`
 		///
 		var description: String {
 			switch self {
@@ -125,15 +130,15 @@ extension StyledImage {
 		}
 	}
 	
-	/// This type is used to support transformations on `StyledImage` like `Blend`
+	/// This type is used to support transformations on `StyledImage` like `renderMode`
 	struct LazyImage: Hashable, CustomStringConvertible {
 		/// Is generated on `init`, to keep the type Hashable and hide `StyledImage` in order to let `StyledImage` hold `LazyImage` in its definition
 		let imageHashValue: Int
 		
-		/// Describes current Image that will be returned
+		/// Describes current image that will be returned
 		let imageDescription: String
 		
-		/// Describes current Image that will be returned
+		/// Describes current image that will be returned
 		var description: String { imageDescription }
 		
 		/// Provides `UIImage` which can be backed by `StyledImage` or static `UIImage`
@@ -156,10 +161,10 @@ extension StyledImage {
 		
 		/// Will use custom Provider to provide `UIImage` when needed
 		/// - Parameter name: Will be used as `description` and inside hash-algorithms
-		init(name: String, _ ImageProvider: @escaping (_ scheme: StyledImageScheme) -> UIImage?) {
+		init(name: String, _ imageProvider: @escaping (_ scheme: StyledImageScheme) -> UIImage?) {
 			imageHashValue = Self.hashed("ImageProvider", name)
 			imageDescription = name
-			image = ImageProvider
+			image = imageProvider
 		}
 		
 		/// - Returns: `hashValue` of given parameters when initializing `LazyImage`
@@ -182,13 +187,33 @@ extension StyledImage {
 	/// - Parameter lazyImage: `LazyImage` instance
 	init(lazyImage: LazyImage) { resolver = .lazy(lazyImage) }
 	
+	
+	/// Will return the backed `StyledImage` with given `renderingMode`
+	///
+	/// - Parameter renderingMode: `UIImage.RenderingMode`
+	public func renderingMode(_ renderingMode: UIImage.RenderingMode) -> StyledImage {
+		return .init(lazyImage: .init(name: "\(self)(\(renderingMode.styledDescription))") { scheme in
+			guard let image = self.resolve(from: scheme) else { return nil }
+			return image.withRenderingMode(renderingMode)
+			})
+	}
+	
+	/// Will return the given `StyledImage` with the given renderingMode
+	///
+	/// - Parameter renderingMode: `UIImage.RenderingMode`
+	/// - Parameter styledImage: `StyledImage`
+	public static func renderingMode(_ renderingMode: UIImage.RenderingMode,
+									 of styledImage: StyledImage) -> StyledImage {
+		styledImage.renderingMode(renderingMode)
+	}
+	
 	/// Applies custom transformations on the `UIImage`
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIImage`
 	public func transform(named name: String = "t", _ transform: @escaping (UIImage) -> UIImage) -> StyledImage {
-		return .init(lazyImage: .init(name: "\(name)->\(self)", { scheme in
-			guard let Image = self.resolve(from: scheme) else { return nil }
-			return transform(Image)
+		return .init(lazyImage: .init(name: "\(self)->\(name)", { scheme in
+			guard let image = self.resolve(from: scheme) else { return nil }
+			return transform(image)
 		}))
 	}
 	
@@ -222,9 +247,11 @@ public protocol StyledImageScheme {
 	
 	/// `Styled` will use this method to fetch `UIImage`
 	///
+	/// - Important: **Do not** call this method directly. use `UIImage.styled(_:)` instead.
+	///
 	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `styledImage`
 	///
-	/// - Important: **Do not** call this method directly. use `UIImage.styled(_:)` instead.
+	/// - Note: It's guaranteed all `StyledImage`s sent to this message, will contain field `name`
 	///
 	/// Sample for `DarkImageScheme`:
 	///
@@ -233,7 +260,7 @@ public protocol StyledImageScheme {
 	/// 	        switch styledImage {
 	/// 	        case .profileFill: // return profile filled image
 	/// 	        case .profileMulti: // return multi profile image
-	/// 	        default: fatalError("Forgot to support profile itself")
+	/// 	        default: fatalError("Forgot to support \(styledImage)")
 	/// 	        }
 	/// 	    }
 	/// 	}
@@ -242,21 +269,24 @@ public protocol StyledImageScheme {
 	func image(for styledImage: StyledImage) -> UIImage?
 }
 
-// MARK:- StyledImageAssetsCatalog
-/// Will fetch `StyledImage`s from Assets Catalog
-///
-/// - Note: if `StyledImage.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d` will look for `a.b.c`
-/// and if `a.b.c` is failed to be loaded, will look for `a.b` and so on. Will return `nil` if nothing were found.
-///
-/// - SeeAlso: `StyledImage(_:,bundle:)`
-public struct StyledImageAssetsCatalog: StyledImageScheme {
+// MARK:- StyledAssetCatalog
+extension UIImage {
 	
-	/// - Note: **Do not** Call this method directly
+	/// Will fetch `StyledImage`s from Assets Catalog
 	///
-	/// - Parameter styledImage: `StyledImage`
-	public func image(for styledImage: StyledImage) -> UIImage? { .named(styledImage.description, in: nil) }
-	
-	public init() { }
+	/// - Note: if `StyledImage.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
+	///  will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
+	///  Will return `nil` if nothing were found.
+	///
+	/// - SeeAlso: `StyledImage(_:,bundle:)`
+	public struct StyledAssetCatalog: StyledImageScheme {
+		
+		public func image(for styledImage: StyledImage) -> UIImage? {
+			.named(styledImage.description, in: nil)
+		}
+		
+		public init() { }
+	}
 }
 
 extension StyledImage {
@@ -267,7 +297,7 @@ extension StyledImage {
 	public init(_ name: String, bundle: Bundle) {
 		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
 			$0.image(for: .init(name)) ?? UIImage.named(name, in: bundle)
-		})
+			})
 	}
 }
 
@@ -280,7 +310,7 @@ extension UIImage {
 	///
 	/// - Parameter styledImageName: `String` name of the `StyledImage` (mostly it's description"
 	/// - Parameter bundle: `Bundle` to look into it's Assets Catalog
-	fileprivate static func named(_ styledImageName: String, in bundle: Bundle?) -> UIImage? {
+	fileprivate class func named(_ styledImageName: String, in bundle: Bundle?) -> UIImage? {
 		guard StyledImage.isPrefixMatchingEnabled else {
 			return UIImage(named: styledImageName, in: bundle, compatibleWith: nil)
 		}
@@ -292,20 +322,33 @@ extension UIImage {
 		return nil
 	}
 	
-	/// Will fetch `UIImage` defined in current `Styled.imageScheme`
+	/// Will fetch `UIImage` defined in given `StyledImageScheme`
 	///
 	/// - Parameter styledImage: `StyledImage`
-	public static func styled(_ styledImage: StyledImage, from scheme: StyledImageScheme = Styled.imageScheme) -> UIImage? {
+	/// - Parameter scheme: `StyledImageScheme` to search for image. (default: `Styled.imageScheme`)
+	open class func styled(_ styledImage: StyledImage, from scheme: StyledImageScheme = Styled.imageScheme) -> UIImage? {
 		styledImage.resolve(from: scheme)
+	}
+}
+
+extension UIImage.RenderingMode {
+	/// Returns a simple description for UIColor to use in `LazyColor`
+	fileprivate var styledDescription: String {
+		switch self {
+		case .automatic: return "automatic"
+		case .alwaysOriginal: return "alwaysOriginal"
+		case .alwaysTemplate: return "alwaysTemplate"
+		}
 	}
 }
 
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
-	private func update(_ styledImage: StyledImage?, _ apply: @escaping (Base, UIImage?) -> Void) -> StyledUpdate<StyledImage>? {
+	/// Internal `update` method which generates `Styled.Update` and applies the update once.
+	private func update(_ styledImage: StyledImage?, _ apply: @escaping (Base, UIImage?) -> Void) -> Styled.Update<StyledImage>? {
 		guard let styledImage = styledImage else { return nil }
-		let styledUpdate = StyledUpdate(value: styledImage) { [weak base] in
+		let styledUpdate = Styled.Update(value: styledImage) { [weak base] in
 			guard let base = base else { return () }
 			return apply(base, styledImage.resolve(from: Styled.imageScheme))
 		}
@@ -313,27 +356,27 @@ extension StyledWrapper {
 		return styledUpdate
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `ImageScheme` for given `StyledImage`.
+	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `StyledImage`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ImageScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage>) -> StyledImage? {
 		get { styled.images[keyPath]?.value }
 		set { styled.images[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `ImageScheme` for given `StyledImage`.
+	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `StyledImage`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ImageScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage?>) -> StyledImage? {
 		get { styled.images[keyPath]?.value }
 		set { styled.images[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `ImageScheme` for given `StyledImage`.
+	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `StyledImage`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ImageScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage>) -> StyledImage? {
 		get { styled.images[keyPath]?.value }
@@ -345,18 +388,18 @@ extension StyledWrapper {
 		}
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `ImageScheme` for given `StyledImage`.
+	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `StyledImage`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ImageScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage?>) -> StyledImage? {
 		get { styled.images[keyPath]?.value }
 		set { styled.images[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `ImageScheme` for given `StyledImage`.
+	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `StyledImage`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ImageScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage>) -> StyledImage? {
 		get { styled.images[keyPath]?.value }
@@ -368,9 +411,9 @@ extension StyledWrapper {
 		}
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `ImageScheme` for given `StyledImage`.
+	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `StyledImage`.
 	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `ImageScheme`
+	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage?>) -> StyledImage? {
 		get { styled.images[keyPath]?.value }

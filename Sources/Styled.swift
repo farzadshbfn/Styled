@@ -11,39 +11,23 @@ import UIKit
 // MARK:- Styled
 public final class Styled {
 	
-	// MARK: Settings
-	/// Notification will be posted when `colorScheme` changes
-	/// When notification is raised, read `colorScheme` value
-	public static let colorSchemeDidChangeNotification = Notification.Name(rawValue: "StyledColorSchemeDidChangeNotification")
-	
-	/// Defines current `ColorScheme` used
-	///
-	/// - Note: Will post `colorSchemeDidChangeNotification` notification when changed
-	/// - Note: re-setting the same `colorScheme` will trigger the notification.
-	public static var colorScheme: StyledColorScheme! = nil {
-		didSet { NotificationCenter.default.post(name: colorSchemeDidChangeNotification, object: nil) }
-	}
-	
-	/// Notification will be posted when `ImageScheme` changes
-	/// When notification is raised, read `imageScheme` value
-	public static let imageSchemeDidChangeNotification = Notification.Name(rawValue: "StyledImageSchemeDidChangeNotification")
-	
-	/// Defines current `ImageScheme` used
-	///
-	/// - Note: Will post `ImageSchemeDidChangeNotification` notification when changed
-	/// - Note: re-setting the same `imageScheme` will trigger the notification.
-	public static var imageScheme: StyledImageScheme! = nil {
-		didSet { NotificationCenter.default.post(name: imageSchemeDidChangeNotification, object: nil) }
-	}
-	
 	/// Will hold Observers for defined Notifications
 	var observers: [NSObjectProtocol] = []
 	
 	/// Will hold `KeyPath`s and `Update` instances to update colors when needed
 	var colors: [AnyKeyPath: Update<StyledColor>] = [:]
 	
+	// TODO: shouldUpdateColors
+	
 	/// Will hold `KeyPath`s and `Update` instances to update images when needed
 	var images: [AnyKeyPath: Update<StyledImage>] = [:]
+	
+	// TODO: shouldUpdateImages
+	
+	/// Will hold `KeyPath`s and `Update` instances to update fonts when needed
+	var fonts: [AnyKeyPath: Update<StyledFont>] = [:]
+	
+	// TODO: shouldUpdateFonts
 	
 	/// Creates an Styled class
 	///
@@ -59,7 +43,11 @@ public final class Styled {
 			center.addObserver(forName: Styled.imageSchemeDidChangeNotification,
 							   object: nil,
 							   queue: .main,
-							   using: { [weak self] _ in self?.applyImages() })
+							   using: { [weak self] _ in self?.applyImages() }),
+			center.addObserver(forName: Styled.fontSchemeDidChangeNotification,
+							   object: nil,
+							   queue: .main,
+							   using: { [weak self] _ in self?.applyFonts() })
 		]
 	}
 	
@@ -73,6 +61,11 @@ public final class Styled {
 	/// Calling this method, will update all images associated with `styled`
 	@objc func applyImages() {
 		DispatchQueue.main.async { self.images.values.forEach { $0.update() } }
+	}
+	
+	/// Calling this method, will update all fonts associated with `styled`
+	@objc func applyFonts() {
+		DispatchQueue.main.async { self.fonts.values.forEach { $0.update() } }
 	}
 }
 
@@ -107,14 +100,21 @@ private var associatedStyledHolder: Int8 = 0
 	
 	/// Calling this method, will update all images associated with `styled`
 	public func applyImages() { styled.applyImages() }
+	
+	/// Calling this method, will update all fonts associated with `styled`
+	public func applyFonts() { styled.applyFonts() }
 }
 
 // MARK:- StyledUpdate
-/// Contains an `StyledItem` (i.e `StyledColor`, `StyledFont`, `StyledImage`, ...) and a closure to Update the `KeyPath` with given `Value`
-struct StyledUpdate<Value> {
-	let value: Value
-	let update: () -> ()
+extension Styled {
+	
+	/// Contains an `StyledItem` (i.e `StyledColor`, `StyledFont`, `StyledImage`, ...) and a closure to Update the `KeyPath` with given `Value`
+	struct Update<Value> {
+		let value: Value
+		let update: () -> ()
+	}
 }
+
 
 // MARK:- StyledCompatbile
 /// A type that enables any object to be Stylable
@@ -135,10 +135,47 @@ extension StyledCompatible {
 
 extension NSObject: StyledCompatible { }
 
-// MARK:- Typealiases
 extension Styled {
-	typealias Color = StyledColor
-	typealias ColorScheme = StyledColorScheme
 	
-	typealias Update = StyledUpdate
+	// MARK: ColorSettings
+	
+	/// Notification will be posted when `colorScheme` changes
+	/// When notification is raised, read `colorScheme` value
+	public static let colorSchemeDidChangeNotification = Notification.Name(rawValue: "StyledColorSchemeDidChangeNotification")
+	
+	/// Defines current `StyledColorScheme` used. (for iOS11 and later default is: `UIColor.StyledAssetCatalog`)
+	///
+	/// - Note: Will post `colorSchemeDidChangeNotification` notification when changed
+	/// - Note: re-setting the same `colorScheme` will trigger the notification.
+	public static var colorScheme: StyledColorScheme! = nil {
+		didSet { NotificationCenter.default.post(name: colorSchemeDidChangeNotification, object: nil) }
+	}
+	
+	// MARK: ImageSettings
+	
+	/// Notification will be posted when `imageScheme` changes
+	/// When notification is raised, read `imageScheme` value
+	public static let imageSchemeDidChangeNotification = Notification.Name(rawValue: "StyledImageSchemeDidChangeNotification")
+	
+	/// Defines current `StyledImageScheme` used (default is: `UIImage.StyledAssetCatalog`)
+	///
+	/// - Note: Will post `imageSchemeDidChangeNotification` notification when changed
+	/// - Note: re-setting the same `imageScheme` will trigger the notification.
+	public static var imageScheme: StyledImageScheme! = UIImage.StyledAssetCatalog() {
+		didSet { NotificationCenter.default.post(name: imageSchemeDidChangeNotification, object: nil) }
+	}
+	
+	// MARK: FontSettings
+	
+	/// Notification will be posted when `fontScheme` changes
+	/// When notification is raised, read `fontScheme` value
+	public static let fontSchemeDidChangeNotification = Notification.Name(rawValue: "StyledFontSchemeDidChangeNotification")
+	
+	/// Defines current `StyledFontScheme` used (default is `UIFont.StyledSystemFontCategory`)
+	///
+	/// - Note: Will post `fontSchemeDidChangeNotification` notification when changed
+	/// - Note: re-setting the same `fontScheme` will trigger the notification.
+	public static var fontScheme: StyledFontScheme! = UIFont.StyledSystemFontCategory() {
+		didSet { NotificationCenter.default.post(name: fontSchemeDidChangeNotification, object: nil) }
+	}
 }
