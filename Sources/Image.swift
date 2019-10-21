@@ -338,6 +338,7 @@ extension UIImage.RenderingMode {
 		case .automatic: return "automatic"
 		case .alwaysOriginal: return "alwaysOriginal"
 		case .alwaysTemplate: return "alwaysTemplate"
+		@unknown default: return "\(self)"
 		}
 	}
 }
