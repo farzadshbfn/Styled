@@ -348,16 +348,16 @@ extension UIFont {
 	/// Will fetch `UIFont` defined in given `StyledFontScheme`
 	///
 	/// - Parameter styledFont: `StyledFont`
-	/// - Parameter scheme: `StyledFontScheme` to search for font. (default: `Styled.fontScheme`)
-	open class func styled(_ styledFont: StyledFont, from scheme: StyledFontScheme = Styled.fontScheme) -> UIFont? {
+	/// - Parameter scheme: `StyledFontScheme` to search for font. (default: `Styled.defaultFontScheme`)
+	open class func styled(_ styledFont: StyledFont, from scheme: StyledFontScheme = Styled.defaultFontScheme) -> UIFont? {
 		styledFont.resolve(from: scheme)
 	}
 	
 	/// Will fetch suitable `pointSize` for given `StyledFont.Font.Size` defined in given `StyledFontScheme`
 	///
 	/// - Parameter size: `StyledFont.Font.Size`
-	/// - Parameter scheme: `StyledFontScheme` to search for suitable pointSize. (default: `Styled.fontScheme`
-	open class func preferedFontSize(for size: StyledFont.Font.Size, from scheme: StyledFontScheme = Styled.fontScheme) -> CGFloat {
+	/// - Parameter scheme: `StyledFontScheme` to search for suitable pointSize. (default: `Styled.defaultFontScheme`
+	open class func preferedFontSize(for size: StyledFont.Font.Size, from scheme: StyledFontScheme = Styled.defaultFontScheme) -> CGFloat {
 		size.resolve(from: scheme)
 	}
 }
@@ -411,11 +411,11 @@ extension StyledWrapper {
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ styledFont: StyledFont?, _ apply: @escaping (Base, UIFont?) -> Void) -> Styled.Update<StyledFont>? {
 		guard let styledFont = styledFont else { return nil }
-		let styledUpdate = Styled.Update(value: styledFont) { [weak base] in
+		let styledUpdate = Styled.Update(item: styledFont) { [weak base] scheme in
 			guard let base = base else { return () }
-			return apply(base, styledFont.resolve(from: Styled.fontScheme))
+			return apply(base, styledFont.resolve(from: scheme))
 		}
-		styledUpdate.update()
+		styledUpdate.update(styled.fontScheme)
 		return styledUpdate
 	}
 	
@@ -424,7 +424,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont>) -> StyledFont? {
-		get { styled.fonts[keyPath]?.value }
+		get { styled.fonts[keyPath]?.item }
 		set { styled.fonts[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
@@ -433,7 +433,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont?>) -> StyledFont? {
-		get { styled.fonts[keyPath]?.value }
+		get { styled.fonts[keyPath]?.item }
 		set { styled.fonts[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 }

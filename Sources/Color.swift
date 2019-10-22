@@ -402,8 +402,8 @@ extension UIColor {
 	/// Will fetch `UIColor` defined in given `StyledColorScheme`
 	///
 	/// - Parameter styledColor: `StyledColor`
-	/// - Parameter scheme: `StyledColorScheme` to search for color. (default: `Styled.colorScheme`)
-	open class func styled(_ styledColor: StyledColor, from scheme: StyledColorScheme = Styled.colorScheme) -> UIColor? {
+	/// - Parameter scheme: `StyledColorScheme` to search for color. (default: `Styled.defaultColorScheme`)
+	open class func styled(_ styledColor: StyledColor, from scheme: StyledColorScheme = Styled.defaultColorScheme) -> UIColor? {
 		styledColor.resolve(from: scheme)
 	}
 	
@@ -436,11 +436,11 @@ extension StyledWrapper {
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ styledColor: StyledColor?, _ apply: @escaping (Base, UIColor?) -> Void) -> Styled.Update<StyledColor>? {
 		guard let styledColor = styledColor else { return nil }
-		let styledUpdate = Styled.Update(value: styledColor) { [weak base] in
+		let styledUpdate = Styled.Update(item: styledColor) { [weak base] scheme in
 			guard let base = base else { return () }
-			return apply(base, styledColor.resolve(from: Styled.colorScheme))
+			return apply(base, styledColor.resolve(from: scheme))
 		}
-		styledUpdate.update()
+		styledUpdate.update(styled.colorScheme)
 		return styledUpdate
 	}
 	
@@ -449,7 +449,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
+		get { styled.colors[keyPath]?.item }
 		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
@@ -458,7 +458,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
+		get { styled.colors[keyPath]?.item }
 		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
@@ -467,7 +467,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
+		get { styled.colors[keyPath]?.item }
 		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.cgColor : () } }
 	}
 	
@@ -476,7 +476,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
+		get { styled.colors[keyPath]?.item }
 		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
 	}
 	
@@ -485,7 +485,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
+		get { styled.colors[keyPath]?.item }
 		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.ciColor : () } }
 	}
 	
@@ -494,7 +494,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.value }
+		get { styled.colors[keyPath]?.item }
 		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
 }

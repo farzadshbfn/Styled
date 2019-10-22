@@ -39,7 +39,7 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	override func tearDown() {
-		Styled.colorScheme = nil
+		Styled.defaultColorScheme = nil
 	}
 	
 	func testName() {
@@ -109,7 +109,7 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testColorLoad() {
-		Styled.colorScheme = TestScheme()
+		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(.primary)) == .red
 		expect(UIColor.styled(.primary1)) == .green
@@ -118,7 +118,7 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testBlending() {
-		Styled.colorScheme = TestScheme()
+		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(.blending(.primary, with: .primary1))) == .init(red: 0.5, green: 0.5, blue: 0.0, alpha: 1.0)
 		expect(UIColor.styled(StyledColor.primary.blend(0.1, with: UIColor.black))) == .init(red: 0.1, green: 0.0, blue: 0.0, alpha: 1.0)
@@ -128,7 +128,7 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testOpacity() {
-		Styled.colorScheme = TestScheme()
+		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(.opacity(0.25, of: .primary2))) == .init(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.25)
 		expect(UIColor.styled(.primary)?.withAlphaComponent(0.5)) == .styled(StyledColor.primary.opacity(0.5))
@@ -137,7 +137,7 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testTransform() {
-		Styled.colorScheme = TestScheme()
+		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(StyledColor.primary.transform(named: "blend") { $0.blend(with: .black) })) == .init(red: 0.5, green: 0.0, blue: 0.0, alpha: 1.0)
 		
@@ -150,7 +150,7 @@ class StyledColorTests: XCTestCase {
 	
 	func testAssetsCatalog() {
 		if #available(iOS 11, *) {
-			Styled.colorScheme = UIColor.StyledAssetCatalog()
+			Styled.defaultColorScheme = UIColor.StyledAssetCatalog()
 			
 			expect(UIColor.styled("red.primary")) == .red
 			// lvl1 does not exist. should match to `red.primary`

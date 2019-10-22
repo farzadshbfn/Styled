@@ -325,8 +325,8 @@ extension UIImage {
 	/// Will fetch `UIImage` defined in given `StyledImageScheme`
 	///
 	/// - Parameter styledImage: `StyledImage`
-	/// - Parameter scheme: `StyledImageScheme` to search for image. (default: `Styled.imageScheme`)
-	open class func styled(_ styledImage: StyledImage, from scheme: StyledImageScheme = Styled.imageScheme) -> UIImage? {
+	/// - Parameter scheme: `StyledImageScheme` to search for image. (default: `Styled.defaultImageScheme`)
+	open class func styled(_ styledImage: StyledImage, from scheme: StyledImageScheme = Styled.defaultImageScheme) -> UIImage? {
 		styledImage.resolve(from: scheme)
 	}
 }
@@ -349,11 +349,11 @@ extension StyledWrapper {
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ styledImage: StyledImage?, _ apply: @escaping (Base, UIImage?) -> Void) -> Styled.Update<StyledImage>? {
 		guard let styledImage = styledImage else { return nil }
-		let styledUpdate = Styled.Update(value: styledImage) { [weak base] in
+		let styledUpdate = Styled.Update(item: styledImage) { [weak base] scheme in
 			guard let base = base else { return () }
-			return apply(base, styledImage.resolve(from: Styled.imageScheme))
+			return apply(base, styledImage.resolve(from: scheme))
 		}
-		styledUpdate.update()
+		styledUpdate.update(styled.imageScheme)
 		return styledUpdate
 	}
 	
@@ -362,7 +362,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage>) -> StyledImage? {
-		get { styled.images[keyPath]?.value }
+		get { styled.images[keyPath]?.item }
 		set { styled.images[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
@@ -371,7 +371,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage?>) -> StyledImage? {
-		get { styled.images[keyPath]?.value }
+		get { styled.images[keyPath]?.item }
 		set { styled.images[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
@@ -380,7 +380,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage>) -> StyledImage? {
-		get { styled.images[keyPath]?.value }
+		get { styled.images[keyPath]?.item }
 		set {
 			styled.images[keyPath] = update(newValue) { base, image in
 				guard let cgImage = image?.cgImage else { return () }
@@ -394,7 +394,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage?>) -> StyledImage? {
-		get { styled.images[keyPath]?.value }
+		get { styled.images[keyPath]?.item }
 		set { styled.images[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
 	}
 	
@@ -403,7 +403,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage>) -> StyledImage? {
-		get { styled.images[keyPath]?.value }
+		get { styled.images[keyPath]?.item }
 		set {
 			styled.images[keyPath] = update(newValue) { base, image in
 				guard let ciImage = image?.ciImage else { return () }
@@ -417,7 +417,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage?>) -> StyledImage? {
-		get { styled.images[keyPath]?.value }
+		get { styled.images[keyPath]?.item }
 		set { styled.images[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciImage } }
 	}
 }
