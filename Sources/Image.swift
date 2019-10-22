@@ -274,9 +274,8 @@ extension UIImage {
 	
 	/// Will fetch `StyledImage`s from Assets Catalog
 	///
-	/// - Note: if `StyledImage.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
-	///  will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
-	///  Will return `nil` if nothing were found.
+	/// - Note: if `StyledImage.isPrefixMatchingEnabled` does not affect `StyledAssetCatalog` since
+	/// AssetCatalog itself will fetch image with prefix-matching
 	///
 	/// - SeeAlso: `StyledImage(_:,bundle:)`
 	public struct StyledAssetCatalog: StyledImageScheme {
@@ -311,15 +310,7 @@ extension UIImage {
 	/// - Parameter styledImageName: `String` name of the `StyledImage` (mostly it's description"
 	/// - Parameter bundle: `Bundle` to look into it's Assets Catalog
 	fileprivate class func named(_ styledImageName: String, in bundle: Bundle?) -> UIImage? {
-		guard StyledImage.isPrefixMatchingEnabled else {
-			return UIImage(named: styledImageName, in: bundle, compatibleWith: nil)
-		}
-		var name = styledImageName
-		while name != "" {
-			if let Image = UIImage(named: name, in: bundle, compatibleWith: nil) { return Image }
-			name = name.split(separator: ".").dropLast().joined(separator: ".")
-		}
-		return nil
+		UIImage(named: styledImageName, in: bundle, compatibleWith: nil)
 	}
 	
 	/// Will fetch `UIImage` defined in given `StyledImageScheme`

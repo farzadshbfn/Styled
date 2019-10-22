@@ -30,10 +30,6 @@ class StyledColorTests: XCTestCase {
 		}
 	}
 	
-	let primary: StyledColor = "primary"
-	let primary1: StyledColor = "primary.lvl1"
-	let primary2: StyledColor = "primary.lvl2"
-	
 	override func setUp() {
 		StyledColor.isPrefixMatchingEnabled = true
 	}
@@ -70,21 +66,21 @@ class StyledColorTests: XCTestCase {
 		expect(.primary1 ~= .primary1) == true
 		expect(.primary2 ~= .primary2) == true
 		
-		switch primary2 {
-		case primary: break
+		switch StyledColor.primary2 {
+		case .primary: break
 		default: fail("primary case should be matched")
 		}
 		
-		switch primary {
-		case primary1, primary2: fail("non of these cases should be matched")
+		switch StyledColor.primary {
+		case .primary1, .primary2: fail("non of these cases should be matched")
 		default: break
 		}
 	}
 	
-	func testLazyColor() {
-		let lazy1 = StyledColor.LazyColor(primary)
-		let lazy2 = StyledColor.LazyColor(primary)
-		let lazy3 = StyledColor.LazyColor(primary1)
+	func testLazy() {
+		let lazy1 = StyledColor.LazyColor(.primary)
+		let lazy2 = StyledColor.LazyColor(.primary)
+		let lazy3 = StyledColor.LazyColor(.primary1)
 		
 		expect(lazy1) == lazy2
 		expect(lazy1) != lazy3
@@ -104,16 +100,17 @@ class StyledColorTests: XCTestCase {
 		if #available(iOS 11, *) {
 			expect(StyledColor("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
 			
-			expect(StyledColor("bundled", bundle: Bundle()).description) == "{bundled(bundle.not.found)}"
+			expect(StyledColor("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
 		}
 	}
 	
-	func testColorLoad() {
+	func testLoad() {
 		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(.primary)) == .red
 		expect(UIColor.styled(.primary1)) == .green
 		expect(UIColor.styled(.primary2)) == .blue
+		expect(UIColor.styled(.primary)) != .blue
 		expect(UIColor.styled("unknown")).to(beNil())
 	}
 	
