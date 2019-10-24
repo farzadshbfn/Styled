@@ -98,6 +98,8 @@ class StyledImageTests: XCTestCase {
 		expect("\(StyledImage.profile)") == "profile"
 		
 		expect(StyledImage.renderingMode(.alwaysTemplate, of: .profileMulti).description) == "{profile.multi(alwaysTemplate)}"
+		expect(StyledImage.renderingMode(.alwaysOriginal, of: .profileMulti).description) == "{profile.multi(alwaysOriginal)}"
+		expect(StyledImage.renderingMode(.automatic, of: .profileMulti).description) == "{profile.multi(automatic)}"
 		expect(StyledImage.profileFill.transform { $0 }.description) == "{profile.fill->t}"
 		expect(StyledImage.profile.transform(named: "custom") { $0 }.description) == "{profile->custom}"
 		
