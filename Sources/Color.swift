@@ -162,7 +162,7 @@ extension StyledColor {
 		init(_ styledColor: StyledColor) {
 			colorHashValue = Self.hashed("StyledColor", styledColor)
 			colorDescription = styledColor.description
-			color = { styledColor.resolve(from: $0) }
+			color = styledColor.resolve
 		}
 		
 		/// Will directly propagate given `UIColor` when needed

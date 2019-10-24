@@ -156,7 +156,7 @@ extension StyledImage {
 		init(_ styledImage: StyledImage) {
 			imageHashValue = Self.hashed("StyledImage", styledImage)
 			imageDescription = styledImage.description
-			image = { styledImage.resolve(from: $0) }
+			image = styledImage.resolve
 		}
 		
 		/// Will use custom Provider to provide `UIImage` when needed

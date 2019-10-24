@@ -199,7 +199,7 @@ extension StyledFont {
 		init(_ styledFont: StyledFont) {
 			fontHashValue = Self.hashed("StyledFont", styledFont)
 			fontDescription = styledFont.description
-			font = { styledFont.resolve(from: $0) }
+			font = styledFont.resolve
 		}
 		
 		/// Will use custom Provider to provide `UIFont` when needed
