@@ -122,11 +122,11 @@ extension StyledColor {
 	/// Internal type to manage Lazy or direct fetching of `UIColor`
 	enum Resolver: Hashable, CustomStringConvertible {
 		case name(String)
-		case lazy(LazyColor)
+		case lazy(Lazy)
 		
 		/// Contains description of current `Resolver` state.
 		///
-		/// - Note: `LazyColor` is surrounded by `{...}`
+		/// - Note: `Lazy` is surrounded by `{...}`
 		///
 		var description: String {
 			switch self {
@@ -137,8 +137,8 @@ extension StyledColor {
 	}
 	
 	/// This type is used to support transformations on `StyledColor` like `.blend`
-	struct LazyColor: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `StyledColor` in order to let `StyledColor` hold `LazyColor` in its definition
+	struct Lazy: Hashable, CustomStringConvertible {
+		/// Is generated on `init`, to keep the type Hashable and hide `StyledColor` in order to let `StyledColor` hold `Lazy` in its definition
 		let colorHashValue: Int
 		
 		/// Describes current color that will be returned
@@ -180,11 +180,11 @@ extension StyledColor {
 			color = colorProvider
 		}
 		
-		/// - Returns: `hashValue` of given parameters when initializing `LazyColor`
+		/// - Returns: `hashValue` of given parameters when initializing `Lazy`
 		func hash(into hasher: inout Hasher) { hasher.combine(colorHashValue) }
 		
 		/// Is backed by `hashValue` comparision
-		static func == (lhs: LazyColor, rhs: LazyColor) -> Bool { lhs.hashValue == rhs.hashValue }
+		static func == (lhs: Lazy, rhs: Lazy) -> Bool { lhs.hashValue == rhs.hashValue }
 	}
 	
 	/// This method is used internally to manage transformations (if any) and provide `UIColor`
@@ -197,20 +197,20 @@ extension StyledColor {
 	}
 	
 	/// Enables `StyledColor` to accept transformations
-	/// - Parameter lazyColor: `LazyColor` instance
-	init(lazyColor: LazyColor) { resolver = .lazy(lazyColor) }
+	/// - Parameter lazy: `Lazy` instance
+	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
-	/// Blends `self`  to the other `LazyColor` given
+	/// Blends `self`  to the other `Lazy` given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
 	///
 	/// - Parameter perc: Amount to pour from `self`. will be clamped to `[`**0.0**, **1.0**`]`
-	/// - Parameter to: Targeted `LazyColor`
+	/// - Parameter to: Targeted `Lazy`
 	/// - Returns: `from * perc + to * (1 - perc)`
-	func blend(_ perc: Double, _ to: LazyColor) -> StyledColor {
+	func blend(_ perc: Double, _ to: Lazy) -> StyledColor {
 		let fromDesc = "\(self)*\(String(format: "%.2f", perc))"
 		let toDesc = "\(to)*\(String(format: "%.2f", 1 - perc))"
-		return .init(lazyColor: .init(name: "\(fromDesc)+\(toDesc)") { scheme in
+		return .init(lazy: .init(name: "\(fromDesc)+\(toDesc)") { scheme in
 			guard let fromUIColor = self.resolve(from: scheme) else { return to.color(scheme) }
 			guard let toUIColor = to.color(scheme) else { return fromUIColor }
 			return fromUIColor.blend(CGFloat(perc), with: toUIColor)
@@ -259,7 +259,7 @@ extension StyledColor {
 	/// - Parameter perc: will be clamped to `[`**0.0**, **1.0**`]`
 	/// - Returns: new instance of `self` with given `opacity`
 	public func opacity(_ perc: Double) -> StyledColor {
-		return .init(lazyColor: .init(name: "\(self)(\(String(format: "%.2f", perc)))") { scheme in
+		return .init(lazy: .init(name: "\(self)(\(String(format: "%.2f", perc)))") { scheme in
 			self.resolve(from: scheme)?.withAlphaComponent(CGFloat(perc))
 			})
 	}
@@ -274,7 +274,7 @@ extension StyledColor {
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIColor`
 	public func transform(named name: String = "t", _ transform: @escaping (UIColor) -> UIColor) -> StyledColor {
-		return .init(lazyColor: .init(name: "\(self)->\(name)", { scheme in
+		return .init(lazy: .init(name: "\(self)->\(name)", { scheme in
 			guard let color = self.resolve(from: scheme) else { return nil }
 			return transform(color)
 		}))
@@ -388,7 +388,7 @@ extension UIColor {
 		return nil
 	}
 	
-	/// Returns a simple description for UIColor to use in `LazyColor`
+	/// Returns a simple description for UIColor to use in `Lazy`
 	fileprivate var styledDescription: String {
 		var color = (r: 0.0 as CGFloat, g: 0.0 as CGFloat, b: 0.0 as CGFloat, a: 0.0 as CGFloat)
 		self.getRed(&color.r, green: &color.g, blue: &color.b, alpha: &color.a)

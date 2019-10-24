@@ -160,11 +160,11 @@ extension StyledFont {
 	/// Internal type to manage Lazy or direct fetching of `UIFont`
 	enum Resolver: Hashable, CustomStringConvertible {
 		case font(Font)
-		case lazy(LazyFont)
+		case lazy(Lazy)
 		
 		/// Contains description of current `Resolver` state.
 		///
-		/// - Note: `LazyFont` is surrounded by `{...}`
+		/// - Note: `Lazy` is surrounded by `{...}`
 		///
 		var description: String {
 			switch self {
@@ -174,8 +174,8 @@ extension StyledFont {
 		}
 	}
 	
-	struct LazyFont: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `StyledFont` in order to let `StyledFont` hold `LazyFont` in its definition
+	struct Lazy: Hashable, CustomStringConvertible {
+		/// Is generated on `init`, to keep the type Hashable and hide `StyledFont` in order to let `StyledFont` hold `Lazy` in its definition
 		let fontHashValue: Int
 		
 		/// Describes current font that will be returned
@@ -210,11 +210,11 @@ extension StyledFont {
 			font = fontProvider
 		}
 		
-		/// - Returns: `hashValue` of given parameters when initializing `LazyFont`
+		/// - Returns: `hashValue` of given parameters when initializing `Lazy`
 		func hash(into hasher: inout Hasher) { hasher.combine(fontHashValue) }
 		
 		/// Is backed by `hashValue` comparision
-		static func == (lhs: LazyFont, rhs: LazyFont) -> Bool { lhs.hashValue == rhs.hashValue }
+		static func == (lhs: Lazy, rhs: Lazy) -> Bool { lhs.hashValue == rhs.hashValue }
 	}
 	
 	/// This method is used internally to manage transformations (if any) and provide `UIFont`
@@ -227,14 +227,14 @@ extension StyledFont {
 	}
 	
 	/// Enables `StyledFont` to accept transformations
-	/// - Parameter lazyFont: `LazyFont` instance
-	init(lazyFont: LazyFont) { resolver = .lazy(lazyFont) }
+	/// - Parameter lazy: `Lazy` instance
+	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
 	/// Applies custom transformations on the `UIFont`
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIFont`
 	public func transform(named name: String = "t", _ transform: @escaping (UIFont) -> UIFont) -> StyledFont {
-		return .init(lazyFont: .init(name: "\(name)->\(self)", { scheme in
+		return .init(lazy: .init(name: "\(name)->\(self)", { scheme in
 			guard let font = self.resolve(from: scheme) else { return nil }
 			return transform(font)
 		}))

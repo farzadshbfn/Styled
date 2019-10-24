@@ -82,15 +82,15 @@ class StyledImageTests: XCTestCase {
 	func testLazy() {
 		Styled.defaultImageScheme = TestScheme()
 		
-		let lazy1 = StyledImage.LazyImage(.profile)
-		let lazy2 = StyledImage.LazyImage(.profile)
-		let lazy3 = StyledImage.LazyImage(.profileFill)
+		let lazy1 = StyledImage.Lazy(.profile)
+		let lazy2 = StyledImage.Lazy(.profile)
+		let lazy3 = StyledImage.Lazy(.profileFill)
 
 		expect(lazy1) == lazy2
 		expect(lazy1) != lazy3
 		expect(lazy2) != lazy3
 		
-		expect(UIImage.styled(.init(lazyImage: lazy1))) == UIImage(named: "profile")
+		expect(UIImage.styled(.init(lazy: lazy1))) == UIImage(named: "profile")
 	}
 	
 	func testDescriptions() {

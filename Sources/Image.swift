@@ -116,11 +116,11 @@ extension StyledImage {
 	/// Internal type to manage Lazy or direct fetching of `UIImage`
 	enum Resolver: Hashable, CustomStringConvertible {
 		case name(String)
-		case lazy(LazyImage)
+		case lazy(Lazy)
 		
 		/// Contains description of current `Resolver` state.
 		///
-		/// - Note: `LazyImage` is surrounded by `{...}`
+		/// - Note: `Lazy` is surrounded by `{...}`
 		///
 		var description: String {
 			switch self {
@@ -131,8 +131,8 @@ extension StyledImage {
 	}
 	
 	/// This type is used to support transformations on `StyledImage` like `renderMode`
-	struct LazyImage: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `StyledImage` in order to let `StyledImage` hold `LazyImage` in its definition
+	struct Lazy: Hashable, CustomStringConvertible {
+		/// Is generated on `init`, to keep the type Hashable and hide `StyledImage` in order to let `StyledImage` hold `Lazy` in its definition
 		let imageHashValue: Int
 		
 		/// Describes current image that will be returned
@@ -167,11 +167,11 @@ extension StyledImage {
 			image = imageProvider
 		}
 		
-		/// - Returns: `hashValue` of given parameters when initializing `LazyImage`
+		/// - Returns: `hashValue` of given parameters when initializing `Lazy`
 		func hash(into hasher: inout Hasher) { hasher.combine(imageHashValue) }
 		
 		/// Is backed by `hashValue` comparision
-		static func == (lhs: LazyImage, rhs: LazyImage) -> Bool { lhs.hashValue == rhs.hashValue }
+		static func == (lhs: Lazy, rhs: Lazy) -> Bool { lhs.hashValue == rhs.hashValue }
 	}
 	
 	/// This method is used internally to manage transformations (if any) and provide `UIImage`
@@ -184,15 +184,15 @@ extension StyledImage {
 	}
 	
 	/// Enables `StyledImage` to accept transformations
-	/// - Parameter lazyImage: `LazyImage` instance
-	init(lazyImage: LazyImage) { resolver = .lazy(lazyImage) }
+	/// - Parameter lazy: `Lazy` instance
+	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
 	
 	/// Will return the backed `StyledImage` with given `renderingMode`
 	///
 	/// - Parameter renderingMode: `UIImage.RenderingMode`
 	public func renderingMode(_ renderingMode: UIImage.RenderingMode) -> StyledImage {
-		return .init(lazyImage: .init(name: "\(self)(\(renderingMode.styledDescription))") { scheme in
+		return .init(lazy: .init(name: "\(self)(\(renderingMode.styledDescription))") { scheme in
 			guard let image = self.resolve(from: scheme) else { return nil }
 			return image.withRenderingMode(renderingMode)
 			})
@@ -211,7 +211,7 @@ extension StyledImage {
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIImage`
 	public func transform(named name: String = "t", _ transform: @escaping (UIImage) -> UIImage) -> StyledImage {
-		return .init(lazyImage: .init(name: "\(self)->\(name)", { scheme in
+		return .init(lazy: .init(name: "\(self)->\(name)", { scheme in
 			guard let image = self.resolve(from: scheme) else { return nil }
 			return transform(image)
 		}))
@@ -323,7 +323,7 @@ extension UIImage {
 }
 
 extension UIImage.RenderingMode {
-	/// Returns a simple description for UIColor to use in `LazyColor`
+	/// Returns a simple description for UIColor to use in `Lazy`
 	fileprivate var styledDescription: String {
 		switch self {
 		case .automatic: return "automatic"

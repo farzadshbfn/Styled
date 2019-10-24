@@ -78,9 +78,9 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testLazy() {
-		let lazy1 = StyledColor.LazyColor(.primary)
-		let lazy2 = StyledColor.LazyColor(.primary)
-		let lazy3 = StyledColor.LazyColor(.primary1)
+		let lazy1 = StyledColor.Lazy(.primary)
+		let lazy2 = StyledColor.Lazy(.primary)
+		let lazy3 = StyledColor.Lazy(.primary1)
 		
 		expect(lazy1) == lazy2
 		expect(lazy1) != lazy3
