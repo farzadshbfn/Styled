@@ -433,6 +433,19 @@ extension UIColor {
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
+	/// Will get called when  `defaultColorSchemeDidChangeNotification` is raised or `applyColors()` is called or `currentColorScheme` changes
+	/// - Parameter id: A unique Identifier to gain controler over closure
+	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
+	/// - Parameter update: Setting `nil` will stop updating for given `id`
+	public func onColorSchemeChange(withId id: Styled.ClosureId = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
+		guard let update = update else { return styled.colorUpdates[id] = nil }
+		styled.colorUpdates[id] = { [weak base] in
+			guard let base = base else { return }
+			update(base)
+		}
+		if shouldSet { update(base) }
+	}
+	
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ styledColor: StyledColor?, _ apply: @escaping (Base, UIColor?) -> Void) -> Styled.Update<StyledColor>? {
 		guard let styledColor = styledColor else { return nil }
@@ -440,7 +453,7 @@ extension StyledWrapper {
 			guard let base = base else { return () }
 			return apply(base, styledColor.resolve(from: scheme))
 		}
-		styledUpdate.update(styled.colorScheme)
+		styledUpdate.refresh(styled.colorScheme)
 		return styledUpdate
 	}
 	
@@ -449,8 +462,8 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.item }
-		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
+		get { styled.colorUpdates[keyPath]?.item }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
@@ -458,8 +471,8 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.item }
-		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+		get { styled.colorUpdates[keyPath]?.item }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
@@ -467,8 +480,8 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.item }
-		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.cgColor : () } }
+		get { styled.colorUpdates[keyPath]?.item }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.cgColor : () } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
@@ -476,8 +489,8 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.item }
-		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
+		get { styled.colorUpdates[keyPath]?.item }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
@@ -485,8 +498,8 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> StyledColor? {
-		get { styled.colors[keyPath]?.item }
-		set { styled.colors[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.ciColor : () } }
+		get { styled.colorUpdates[keyPath]?.item }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.ciColor : () } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `StyledColor`.
@@ -494,7 +507,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor?>) -> StyledColor? {
-		get { styled.colors[keyPath]?.item }
-		set { styled.colors[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
+		get { styled.colorUpdates[keyPath]?.item }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
 }

@@ -284,7 +284,7 @@ public protocol StyledFontScheme {
 	///
 	/// - Important: **Do not** call this method directly. use `UIFont.styled(_:)` instead.
 	///
-	/// - Note: Unline `StyledColorScheme` & `StyledFontScheme` its good to return a `UIFont` with given `size` and `weight`
+	/// - Note: Unlike `StyledColorScheme` & `StyledFontScheme` its good to return a `UIFont` with given `size` and `weight`
 	///
 	/// - Note: It's guaranteed all `StyledFont`s sent to this message, will contain field `font`
 	///
@@ -408,6 +408,19 @@ extension UIFont.TextStyle {
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
+	/// Will get called when  `defaultFontSchemeDidChangeNotification` is raised or `applyFonts()` is called or `currentFontScheme` changes
+	/// - Parameter id: A unique Identifier to gain controler over closure
+	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
+	/// - Parameter update: Setting `nil` will stop updating for given `id`
+	public func onFontSchemeChange(withId id: Styled.ClosureId = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
+		guard let update = update else { return styled.colorUpdates[id] = nil }
+		styled.colorUpdates[id] = { [weak base] in
+			guard let base = base else { return }
+			update(base)
+		}
+		if shouldSet { update(base) }
+	}
+	
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ styledFont: StyledFont?, _ apply: @escaping (Base, UIFont?) -> Void) -> Styled.Update<StyledFont>? {
 		guard let styledFont = styledFont else { return nil }
@@ -415,7 +428,7 @@ extension StyledWrapper {
 			guard let base = base else { return () }
 			return apply(base, styledFont.resolve(from: scheme))
 		}
-		styledUpdate.update(styled.fontScheme)
+		styledUpdate.refresh(styled.fontScheme)
 		return styledUpdate
 	}
 	
@@ -424,8 +437,8 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont>) -> StyledFont? {
-		get { styled.fonts[keyPath]?.item }
-		set { styled.fonts[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
+		get { styled.fontUpdates[keyPath]?.item }
+		set { styled.fontUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `StyledFont`.
@@ -433,7 +446,7 @@ extension StyledWrapper {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont?>) -> StyledFont? {
-		get { styled.fonts[keyPath]?.item }
-		set { styled.fonts[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+		get { styled.fontUpdates[keyPath]?.item }
+		set { styled.fontUpdates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 }

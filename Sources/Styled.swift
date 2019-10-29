@@ -62,14 +62,11 @@ public final class Styled {
 	/// Current `StyledColorScheme`
 	var colorScheme: StyledColorScheme { customColorScheme ?? Styled.defaultColorScheme }
 	
-	/// Will hold `KeyPath`s and `Update` instances to update colors when needed
-	var colors: [AnyKeyPath: Update<StyledColor>] = [:]
+	/// Will hold `KeyPath` and  closure updates.
+	var colorUpdates = Updates<StyledColor>()
 	
-	/// Calling this method, will update all colors associated with `styled`
-	@objc func applyColors() {
-		let scheme = colorScheme
-		DispatchQueue.main.async { self.colors.values.forEach { $0.update(scheme) } }
-	}
+	/// Calling this method, will update all closures or `KeyPath`s for Color associated with `styled`
+	@objc func applyColors() { colorUpdates.refresh(withScheme: colorScheme) }
 	
 	// MARK: Image
 	
@@ -114,14 +111,11 @@ public final class Styled {
 	/// Current `StyledImageScheme`
 	var imageScheme: StyledImageScheme { customImageScheme ?? Styled.defaultImageScheme }
 	
-	/// Will hold `KeyPath`s and `Update` instances to update images when needed
-	var images: [AnyKeyPath: Update<StyledImage>] = [:]
+	/// Will hold `KeyPath` and  closure updates.
+	var imageUpdates = Updates<StyledImage>()
 	
-	/// Calling this method, will update all images associated with `styled`
-	@objc func applyImages() {
-		let scheme = imageScheme
-		DispatchQueue.main.async { self.images.values.forEach { $0.update(scheme) } }
-	}
+	/// Calling this method, will update all closures or `KeyPath`s for Image associated with `styled`
+	@objc func applyImages() { imageUpdates.refresh(withScheme: imageScheme) }
 	
 	// MARK: Font
 	
@@ -166,14 +160,11 @@ public final class Styled {
 	/// Current `StyledFontScheme`
 	var fontScheme: StyledFontScheme { customFontScheme ?? Styled.defaultFontScheme }
 	
-	/// Will hold `KeyPath`s and `Update` instances to update fonts when needed
-	var fonts: [AnyKeyPath: Update<StyledFont>] = [:]
+	/// Will hold `KeyPath` and  closure updates.
+	var fontUpdates = Updates<StyledFont>()
 	
-	/// Calling this method, will update all fonts associated with `styled`
-	@objc func applyFonts() {
-		let scheme = fontScheme
-		DispatchQueue.main.async { self.fonts.values.forEach { $0.update(scheme) } }
-	}
+	/// Calling this method, will update all closures or `KeyPath`s for Font associated with `styled`
+	@objc func applyFonts() { fontUpdates.refresh(withScheme: fontScheme) }
 	
 	/// Creates an Styled class
 	///
@@ -264,11 +255,44 @@ private var associatedStyledHolder: Int8 = 0
 
 // MARK:- StyledUpdate
 extension Styled {
+	/// Used to Identify update closures used in `onColorSchemeChange(_), onImageSchemeChange(), onFontSchemeChange()`
+	public typealias ClosureId = String
+	
+	/// Contains list of `StyledItem`s (i.e `StyledColor`, `StyledFont`, `StyledImage`, ...) and a `closures` to act upon `Item.Scheme` change
+	struct Updates<Item> where Item: StyledItem {
+		
+		/// Holds `KeyPath` based variables and their `Update`
+		var keyPaths: [AnyKeyPath: Update<Item>] = [:]
+		
+		/// Holds `Id` of closures passed to `Styled` to get called when `Item.Scheme` changes
+		var closures: [ClosureId: () -> ()] = [:]
+		
+		/// Will call all `Update`.`update`s and Closures
+		/// - Parameter scheme: Suitable `Item.Scheme`
+		func refresh(withScheme scheme: Item.Scheme) {
+			DispatchQueue.main.async {
+				self.keyPaths.values.forEach { $0.refresh(scheme) }
+				self.closures.values.forEach { $0() }
+			}
+		}
+		
+		/// Will query through `keyPaths`
+		subscript(_ keyPath: AnyKeyPath) -> Update<Item>? {
+			get { keyPaths[keyPath] }
+			set { keyPaths[keyPath] = newValue }
+		}
+		
+		/// Will query through `closures`
+		subscript(_ id: ClosureId) -> (() -> Void)? {
+			get { closures[id] }
+			set { closures[id] = newValue }
+		}
+	}
 	
 	/// Contains an `StyledItem` (i.e `StyledColor`, `StyledFont`, `StyledImage`, ...) and a closure to Update the `KeyPath` with given `Item`
 	struct Update<Item> where Item: StyledItem {
 		let item: Item
-		let update: (Item.Scheme) -> ()
+		let refresh: (Item.Scheme) -> ()
 	}
 }
 
