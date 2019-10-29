@@ -35,7 +35,7 @@ class ColorTests: XCTestCase {
 	}
 	
 	override func tearDown() {
-		Styled.defaultColorScheme = nil
+		Config.colorScheme = nil
 	}
 	
 	func testName() {
@@ -105,7 +105,7 @@ class ColorTests: XCTestCase {
 	}
 	
 	func testLoad() {
-		Styled.defaultColorScheme = TestScheme()
+		Config.colorScheme = TestScheme()
 		
 		expect(UIColor.styled(.primary)) == .red
 		expect(UIColor.styled(.primary1)) == .green
@@ -115,7 +115,7 @@ class ColorTests: XCTestCase {
 	}
 	
 	func testBlending() {
-		Styled.defaultColorScheme = TestScheme()
+		Config.colorScheme = TestScheme()
 		
 		expect(UIColor.styled(.blending(.primary, with: .primary1))) == .init(red: 0.5, green: 0.5, blue: 0.0, alpha: 1.0)
 		expect(UIColor.styled(Color.primary.blend(0.1, with: UIColor.black))) == .init(red: 0.1, green: 0.0, blue: 0.0, alpha: 1.0)
@@ -125,7 +125,7 @@ class ColorTests: XCTestCase {
 	}
 	
 	func testOpacity() {
-		Styled.defaultColorScheme = TestScheme()
+		Config.colorScheme = TestScheme()
 		
 		expect(UIColor.styled(.opacity(0.25, of: .primary2))) == .init(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.25)
 		expect(UIColor.styled(.primary)?.withAlphaComponent(0.5)) == .styled(Color.primary.opacity(0.5))
@@ -134,7 +134,7 @@ class ColorTests: XCTestCase {
 	}
 	
 	func testTransform() {
-		Styled.defaultColorScheme = TestScheme()
+		Config.colorScheme = TestScheme()
 		
 		expect(UIColor.styled(Color.primary.transform(named: "blend") { $0.blend(with: .black) })) == .init(red: 0.5, green: 0.0, blue: 0.0, alpha: 1.0)
 		
@@ -147,7 +147,7 @@ class ColorTests: XCTestCase {
 	
 	func testAssetsCatalog() {
 		if #available(iOS 11, *) {
-			Styled.defaultColorScheme = UIColor.AssetCatalog()
+			Config.colorScheme = DefaultColorScheme()
 			
 			expect(UIColor.styled("red.primary")) == .red
 			// lvl1 does not exist. should match to `red.primary`
@@ -168,5 +168,6 @@ class ColorTests: XCTestCase {
 	func testTypealises() {
 		expect(StyledColor.self == Color.self) == true
 		expect(StyledColorScheme.self == ColorScheme.self) == true
+		expect(StyledColorScheme.self == StyledColor.self) == false
 	}
 }

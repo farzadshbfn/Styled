@@ -34,7 +34,7 @@ class ImageTests: XCTestCase {
 	}
 
     override func tearDown() {
-		Styled.defaultImageScheme = nil
+		Config.imageScheme = nil
 	}
 	
 	func testName() {
@@ -80,7 +80,7 @@ class ImageTests: XCTestCase {
 	}
 	
 	func testLazy() {
-		Styled.defaultImageScheme = TestScheme()
+		Config.imageScheme = TestScheme()
 		
 		let lazy1 = Image.Lazy(.profile)
 		let lazy2 = Image.Lazy(.profile)
@@ -108,7 +108,7 @@ class ImageTests: XCTestCase {
 	}
 	
 	func testLoad() {
-		Styled.defaultImageScheme = TestScheme()
+		Config.imageScheme = TestScheme()
 		
 		expect(UIImage.styled(.profile)) == UIImage(named: "profile")
 		expect(UIImage.styled(.profileFill)) == UIImage(named: "profile.fill")
@@ -118,7 +118,7 @@ class ImageTests: XCTestCase {
 	}
 	
 	func testRenderingMode() {
-		Styled.defaultImageScheme = TestScheme()
+		Config.imageScheme = TestScheme()
 		
 		expect(UIImage.styled(.renderingMode(.alwaysTemplate, of: .profile))) != UIImage(named: "profile")
 		expect(UIImage.styled(.renderingMode(.alwaysTemplate, of: .profile))) == UIImage(named: "profile")?.withRenderingMode(.alwaysTemplate)
@@ -135,7 +135,7 @@ class ImageTests: XCTestCase {
 	
 	
 	func testTransform() {
-		Styled.defaultImageScheme = TestScheme()
+		Config.imageScheme = TestScheme()
 		
 		expect(UIImage.styled(Image.profile.transform(named: "renderMode", { $0.withRenderingMode(.alwaysTemplate) }))) == UIImage(named: "profile")?.withRenderingMode(.alwaysTemplate)
 		
@@ -145,7 +145,7 @@ class ImageTests: XCTestCase {
 	}
 	
 	func testAssetsCatalog() {
-		Styled.defaultImageScheme = UIImage.AssetCatalog()
+		Config.imageScheme = DefaultImageScheme()
 		Image.isPrefixMatchingEnabled = false
 		
 		expect(UIImage.styled(.profile)) == #imageLiteral(resourceName: "profile")
@@ -162,5 +162,6 @@ class ImageTests: XCTestCase {
 	func testTypealises() {
 		expect(StyledImage.self == Image.self) == true
 		expect(StyledImageScheme.self == ImageScheme.self) == true
+		expect(StyledImageScheme.self == StyledImage.self) == false
 	}
 }

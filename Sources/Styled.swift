@@ -11,35 +11,15 @@ import UIKit
 // MARK:- Styled
 public final class Styled {
 	
-	/// Returns `UIColor.StyledAssetCatalog` for iOS11 and later.
-	static let initialColorScheme: ColorScheme? = {
-		if #available(iOS 11, *) {
-			return UIColor.AssetCatalog()
-		}
-		return nil
-	}()
-	
 	// MARK: Color
 	
-	/// Notification will be posted when `defaultColorScheme` changes
-	/// When notification is raised, read `defaultColorScheme` value
-	public static let defaultColorSchemeDidChangeNotification = Notification.Name(rawValue: "StyledDefaultsColorSchemeDidChangeNotification")
-	
-	/// Defines current `ColorScheme` used. (for iOS11 and later default is: `UIColor.StyledAssetCatalog`)
-	///
-	/// - Note: Will post `defaultColorSchemeDidChangeNotification` notification when changed
-	/// - Note: re-setting the same `defaultColorScheme` will trigger the notification.
-	public static var defaultColorScheme: ColorScheme! = initialColorScheme {
-		didSet { NotificationCenter.default.post(name: defaultColorSchemeDidChangeNotification, object: nil) }
-	}
-	
-	/// Holds reference to the observer for `defaultColorSchemeDidChangeNotification`
+	/// Holds reference to the observer for `Config.colorSchemeDidChange`
 	var colorNotificationObserver: NSObjectProtocol? = nil
 	
 	/// Custom `ColorScheme` used for current Object.
 	///
-	/// - Note: Setting `nil` will make `Styled` listen to `defaultColorSchemeDidChangeNotification`
-	/// - Note: Setting custom `ColorScheme` will stop listening to `defaultColorSchemeDidChangeNotification` and
+	/// - Note: Setting `nil` will make `Styled` listen to `Config.colorSchemeDidChange`
+	/// - Note: Setting custom `ColorScheme` will stop listening to `Config.colorSchemeDidChange` and
 	/// updates colors with given `ColorScheme`
 	var customColorScheme: ColorScheme? = nil {
 		didSet {
@@ -47,7 +27,7 @@ public final class Styled {
 			if customColorScheme == nil {
 				colorNotificationObserver.coalesce(with:
 					NotificationCenter.default.addObserver(
-						forName: Styled.defaultColorSchemeDidChangeNotification,
+						forName: Config.colorSchemeDidChange,
 						object: nil,
 						queue: .main,
 						using: { [weak self] _ in self?.applyColors() })
@@ -60,7 +40,7 @@ public final class Styled {
 	}
 	
 	/// Current `ColorScheme`
-	var colorScheme: ColorScheme { customColorScheme ?? Styled.defaultColorScheme }
+	var colorScheme: ColorScheme { customColorScheme ?? Config.colorScheme }
 	
 	/// Will hold `KeyPath` and  closure updates.
 	var colorUpdates = Updates<Color>()
@@ -70,25 +50,13 @@ public final class Styled {
 	
 	// MARK: Image
 	
-	/// Notification will be posted when `defaultImageScheme` changes
-	/// When notification is raised, read `defaultImageScheme` value
-	public static let defaultImageSchemeDidChangeNotification = Notification.Name(rawValue: "StyledDefaultImageSchemeDidChangeNotification")
-	
-	/// Defines current `ImageScheme` used (default is: `UIImage.StyledAssetCatalog`)
-	///
-	/// - Note: Will post `defaultImageSchemeDidChangeNotification` notification when changed
-	/// - Note: re-setting the same `defaultImageScheme` will trigger the notification.
-	public static var defaultImageScheme: ImageScheme! = UIImage.AssetCatalog() {
-		didSet { NotificationCenter.default.post(name: defaultImageSchemeDidChangeNotification, object: nil) }
-	}
-	
-	/// Holds reference to the observer for `defaultImageSchemeDidChangeNotification`
+	/// Holds reference to the observer for `Config.imageSchemeDidChange`
 	var imageNotificationObserver: NSObjectProtocol? = nil
 	
 	/// Custom `ImageScheme` used for current Object.
 	///
-	/// - Note: Setting `nil` will make `Styled` listen to `defaultImageSchemeDidChangeNotification`
-	/// - Note: Setting custom `ImageScheme` will stop listening to `defaultImageSchemeDidChangeNotification` and
+	/// - Note: Setting `nil` will make `Styled` listen to `Config.imageSchemeDidChange`
+	/// - Note: Setting custom `ImageScheme` will stop listening to `Config.imageSchemeDidChange` and
 	/// updates images with given `ImageScheme`
 	var customImageScheme: ImageScheme? = nil {
 		didSet {
@@ -96,7 +64,7 @@ public final class Styled {
 			if customImageScheme == nil {
 				imageNotificationObserver.coalesce(with:
 					NotificationCenter.default.addObserver(
-						forName: Styled.defaultImageSchemeDidChangeNotification,
+						forName: Config.imageSchemeDidChange,
 						object: nil,
 						queue: .main,
 						using: { [weak self] _ in self?.applyImages() })
@@ -109,7 +77,7 @@ public final class Styled {
 	}
 	
 	/// Current `ImageScheme`
-	var imageScheme: ImageScheme { customImageScheme ?? Styled.defaultImageScheme }
+	var imageScheme: ImageScheme { customImageScheme ?? Config.imageScheme }
 	
 	/// Will hold `KeyPath` and  closure updates.
 	var imageUpdates = Updates<Image>()
@@ -119,25 +87,13 @@ public final class Styled {
 	
 	// MARK: Font
 	
-	/// Notification will be posted when `defaultFontScheme` changes
-	/// When notification is raised, read `defaultFontScheme` value
-	public static let defaultFontSchemeDidChangeNotification = Notification.Name(rawValue: "StyledDefaultFontSchemeDidChangeNotification")
-	
-	/// Defines current `FontScheme` used (default is `UIFont.StyledSystemFontCategory`)
-	///
-	/// - Note: Will post `defaultFontSchemeDidChangeNotification` notification when changed
-	/// - Note: re-setting the same `defaultFontScheme` will trigger the notification.
-	public static var defaultFontScheme: FontScheme! = UIFont.SystemFontCategory() {
-		didSet { NotificationCenter.default.post(name: defaultFontSchemeDidChangeNotification, object: nil) }
-	}
-	
 	/// Holds reference to the observer for `fontSchemeDidChangeNotification`
 	var fontNotificationObserver: NSObjectProtocol? = nil
 	
 	/// Custom `FontScheme` used for current Object.
 	///
-	/// - Note: Setting `nil` will make `Styled` listen to `defaultFontSchemeDidChangeNotification`
-	/// - Note: Setting custom `FontScheme` will stop listening to `defaultFontSchemeDidChangeNotification` and
+	/// - Note: Setting `nil` will make `Styled` listen to `Config.fontSchemeDidChange`
+	/// - Note: Setting custom `FontScheme` will stop listening to `Config.fontSchemeDidChange` and
 	/// updates fonts with given `FontScheme`
 	var customFontScheme: FontScheme? = nil {
 		didSet {
@@ -145,7 +101,7 @@ public final class Styled {
 			if customFontScheme == nil {
 				fontNotificationObserver.coalesce(with:
 					NotificationCenter.default.addObserver(
-						forName: Styled.defaultFontSchemeDidChangeNotification,
+						forName: Config.fontSchemeDidChange,
 						object: nil,
 						queue: .main,
 						using: { [weak self] _ in self?.applyFonts() })
@@ -158,7 +114,7 @@ public final class Styled {
 	}
 	
 	/// Current `FontScheme`
-	var fontScheme: FontScheme { customFontScheme ?? Styled.defaultFontScheme }
+	var fontScheme: FontScheme { customFontScheme ?? Config.fontScheme }
 	
 	/// Will hold `KeyPath` and  closure updates.
 	var fontUpdates = Updates<Font>()
@@ -215,8 +171,8 @@ private var associatedStyledHolder: Int8 = 0
 	
 	/// Custom `ColorScheme` used for current Object.
 	///
-	/// - Note: Setting `nil` will make `Styled` listen to `defaultColorSchemeDidChangeNotification`
-	/// - Note: Setting custom `ColorScheme` will stop listening to `defaultColorSchemeDidChangeNotification` and
+	/// - Note: Setting `nil` will make `Styled` listen to `Config.colorSchemeDidChange`
+	/// - Note: Setting custom `ColorScheme` will stop listening to `Config.colorSchemeDidChange` and
 	/// updates colors with given `ColorScheme`
 	public var customColorScheme: ColorScheme? {
 		get { styled.customColorScheme }
@@ -228,8 +184,8 @@ private var associatedStyledHolder: Int8 = 0
 	
 	/// Custom `ImageScheme` used for current Object.
 	///
-	/// - Note: Setting `nil` will make `Styled` listen to `defaultImageSchemeDidChangeNotification`
-	/// - Note: Setting custom `ImageScheme` will stop listening to `defaultImageSchemeDidChangeNotification` and
+	/// - Note: Setting `nil` will make `Styled` listen to `Config.imageSchemeDidChange`
+	/// - Note: Setting custom `ImageScheme` will stop listening to `Config.imageSchemeDidChange` and
 	/// updates images with given `ImageScheme`
 	public var customImageScheme: ImageScheme? {
 		get { styled.customImageScheme }
@@ -241,8 +197,8 @@ private var associatedStyledHolder: Int8 = 0
 	
 	/// Cusotm `FontScheme` used for current Object.
 	///
-	/// - Note: Setting `nil` will make `Styled` listen to `defaultFontSchemeDidChangeNotification`
-	/// - Note: Setting custom `FontScheme` will stop listening to `defaultFontSchemeDidChangeNotification` and
+	/// - Note: Setting `nil` will make `Styled` listen to `Config.fontSchemeDidChange`
+	/// - Note: Setting custom `FontScheme` will stop listening to `Config.fontSchemeDidChange` and
 	/// updates fonts with given `FontScheme`
 	public var customFontScheme: FontScheme? {
 		get { styled.customFontScheme }

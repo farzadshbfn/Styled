@@ -241,7 +241,7 @@ extension Font {
 /// 	        switch font {
 /// 	        case .title: // return UIFont for all titles in latino localization
 /// 	        case .subtitle: // return UIFont for all subtitles in latino localization
-/// 	        default: latinoFont(weight: font.font!.weight).withSize(size(for: font.font!.size))
+/// 	        default: // return Customized latino font with given font.size! and font.weight!
 /// 	        }
 /// 	    }
 ///
@@ -251,10 +251,6 @@ extension Font {
 /// 	    	// In dynamic case we need to adjust system font for latino fonts
 /// 	    	case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize - 3
 /// 	    	}
-/// 	    }
-///
-/// 	    func latinoFont(_ weight: UIFont.Weight) -> UIFont {
-/// 	    	// loades suitable font from Bundle for given weight
 /// 	    }
 /// 	}
 ///
@@ -275,7 +271,7 @@ public protocol FontScheme {
 	/// 	        switch font {
 	/// 	        case .title: // return UIFont for all titles in latino localization
 	/// 	        case .subtitle: // return UIFont for all subtitles in latino localization
-	/// 	        default: latinoFont(weight: font.font!.weight).withSize(size(for: font.font!.size))
+	/// 	        default: // return Customized latino font with given font.size! and font.weight!
 	/// 	        }
 	/// 	    }
 	/// 	}
@@ -303,21 +299,17 @@ public protocol FontScheme {
 	func size(for size: Font.Size) -> CGFloat
 }
 
-// MARK:- SystemFontCategory
-extension UIFont {
+/// Will fetch `Font`s from system font size category
+public struct DefaultFontScheme: FontScheme {
 	
-	/// Will fetch `Font`s from system font size category
-	public struct SystemFontCategory: FontScheme {
-		
-		public func font(for font: Font) -> UIFont? {
-			.systemFont(ofSize: size(for: font.size!), weight: font.weight!)
-		}
+	public func font(for font: Font) -> UIFont? {
+		.systemFont(ofSize: size(for: font.size!), weight: font.weight!)
+	}
 
-		public func size(for size: Font.Size) -> CGFloat {
-			switch size {
-			case .static(let size): return size
-			case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize
-			}
+	public func size(for size: Font.Size) -> CGFloat {
+		switch size {
+		case .static(let size): return size
+		case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize
 		}
 	}
 }
@@ -328,23 +320,23 @@ extension UIFont {
 	/// Will fetch `UIFont` defined in given `FontScheme`
 	///
 	/// - Parameter font: `Font`
-	/// - Parameter scheme: `FontScheme` to search for font. (default: `Styled.defaultFontScheme`)
-	open class func styled(_ font: Font, from scheme: FontScheme = Styled.defaultFontScheme) -> UIFont? {
+	/// - Parameter scheme: `FontScheme` to search for font. (default: `Config.fontScheme`)
+	open class func styled(_ font: Font, from scheme: FontScheme = Config.fontScheme) -> UIFont? {
 		font.resolve(from: scheme)
 	}
 	
 	/// Will fetch suitable `pointSize` for given `Font.Font.Size` defined in given `FontScheme`
 	///
 	/// - Parameter size: `Font.Font.Size`
-	/// - Parameter scheme: `FontScheme` to search for suitable pointSize. (default: `Styled.defaultFontScheme`
-	open class func preferedFontSize(for size: Font.Size, from scheme: FontScheme = Styled.defaultFontScheme) -> CGFloat {
+	/// - Parameter scheme: `FontScheme` to search for suitable pointSize. (default: `Config.fontScheme`)
+	open class func preferedFontSize(for size: Font.Size, from scheme: FontScheme = Config.fontScheme) -> CGFloat {
 		size.resolve(from: scheme)
 	}
 	
 	/// Will return the font with `Size` given
 	/// - Parameter size: `Font.Size` which determiens font is dynamic or static
-	/// - Parameter scheme: `Scheme` to resolve size of Font from
-	open func withSize(_ size: Font.Size, from scheme: FontScheme = Styled.defaultFontScheme) -> UIFont {
+	/// - Parameter scheme: `Scheme` to resolve size of Font from. (default: `Config.fontScheme`)
+	open func withSize(_ size: Font.Size, from scheme: FontScheme = Config.fontScheme) -> UIFont {
 		self.withSize(size.resolve(from: scheme))
 	}
 }
@@ -352,7 +344,7 @@ extension UIFont {
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
-	/// Will get called when  `defaultFontSchemeDidChangeNotification` is raised or `applyFonts()` is called or `currentFontScheme` changes
+	/// Will get called when  `Config.fontSchemeDidChange` is raised or `applyFonts()` is called or `currentFontScheme` changes
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`

@@ -113,7 +113,12 @@ public struct Color: Hashable, CustomStringConvertible ,ExpressibleByStringLiter
 	/// - Parameter pattern: `Color` to match as prefix of the current value
 	/// - Parameter value: `Color` given to find the best match for
 	@inlinable public static func ~=(pattern: Color, value: Color) -> Bool {
-		isPrefixMatchingEnabled ? value.description.hasPrefix(pattern.description) : value == pattern
+		if isPrefixMatchingEnabled {
+			guard let valueName = value.name, let patternName = pattern.name else { return false }
+			return valueName.hasPrefix(patternName)
+		} else {
+			return value == pattern
+		}
 	}
 }
 
@@ -332,27 +337,27 @@ public protocol ColorScheme {
 	func color(for color: Color) -> UIColor?
 }
 
-// MARK:- AssetCatalog
-extension UIColor {
+/// Will fetch `Color`s from Assets Catalog
+///
+/// - Note: if `Color.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
+/// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
+/// Will return `nil` if nothing were found.
+///
+/// - SeeAlso: `Color(_:,bundle:)`
+@available(iOS 11, *)
+public struct DefaultColorScheme: ColorScheme {
 	
-	/// Will fetch `Color`s from Assets Catalog
-	///
-	/// - Note: if `Color.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
-	/// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
-	/// Will return `nil` if nothing were found.
-	///
-	/// - SeeAlso: `Color(_:,bundle:)`
-	@available(iOS 11, *)
-	public struct AssetCatalog: ColorScheme {
-		
-		public func color(for color: Color) -> UIColor? { .named(color.description, in: nil) }
-		
-		public init() { }
-	}
+	public func color(for color: Color) -> UIColor? { .named(color.description, in: nil) }
+	
+	public init() { }
 }
 
 extension Color {
 	/// Fetches `UIColor` from ColorAsset defined in given `Bundle`
+	///
+	/// - Note: `Color`s initialized with this initializer, will not be sent **directly** to `ColorScheme`. In `ColorScheme`
+	/// read `name` variable to determine what to do.
+	///
 	/// - Parameter name: Name of the color to look-up in Assets Catalog
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsColorScheme`
@@ -370,8 +375,8 @@ extension UIColor {
 	/// Will fetch `UIColor` defined in given `ColorScheme`
 	///
 	/// - Parameter color: `Color`
-	/// - Parameter scheme: `ColorScheme` to search for color. (default: `Styled.defaultColorScheme`)
-	open class func styled(_ color: Color, from scheme: ColorScheme = Styled.defaultColorScheme) -> UIColor? {
+	/// - Parameter scheme: `ColorScheme` to search for color. (default: `Config.colorScheme`)
+	open class func styled(_ color: Color, from scheme: ColorScheme = Config.colorScheme) -> UIColor? {
 		color.resolve(from: scheme)
 	}
 	
@@ -420,7 +425,7 @@ extension UIColor {
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
-	/// Will get called when  `defaultColorSchemeDidChangeNotification` is raised or `applyColors()` is called or `currentColorScheme` changes
+	/// Will get called when  `Config.colorSchemeDidChange` is raised or `applyColors()` is called or `currentColorScheme` changes
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`

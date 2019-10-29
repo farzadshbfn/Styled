@@ -107,7 +107,12 @@ public struct Image: Hashable, CustomStringConvertible ,ExpressibleByStringLiter
 	/// - Parameter pattern: `Image` to match as prefix of the current value
 	/// - Parameter value: `Image` given to find the best match for
 	@inlinable public static func ~=(pattern: Image, value: Image) -> Bool {
-		isPrefixMatchingEnabled ? value.description.hasPrefix(pattern.description) : value == pattern
+		if isPrefixMatchingEnabled {
+			guard let valueName = value.name, let patternName = pattern.name else { return false }
+			return valueName.hasPrefix(patternName)
+		} else {
+			return value == pattern
+		}
 	}
 }
 
@@ -269,27 +274,25 @@ public protocol ImageScheme {
 	func image(for image: Image) -> UIImage?
 }
 
-// MARK:- AssetCatalog
-extension UIImage {
+/// Will fetch `Image`s from Assets Catalog
+///
+/// - Note: `Image.isPrefixMatchingEnabled` does not affect `DefaultImageScheme` since
+/// Assets Catalog  uses prefixMatching for loading `UIImage`
+///
+/// - SeeAlso: `Image(_:,bundle:)`
+public struct DefaultImageScheme: ImageScheme {
 	
-	/// Will fetch `Image`s from Assets Catalog
-	///
-	/// - Note: if `Image.isPrefixMatchingEnabled` does not affect `AssetCatalog` since
-	/// AssetCatalog itself will fetch image with prefix-matching
-	///
-	/// - SeeAlso: `Image(_:,bundle:)`
-	public struct AssetCatalog: ImageScheme {
-		
-		public func image(for image: Image) -> UIImage? {
-			.named(image.description, in: nil)
-		}
-		
-		public init() { }
-	}
+	public func image(for image: Image) -> UIImage? { .named(image.description, in: nil) }
+	
+	public init() { }
 }
 
 extension Image {
 	/// Fetches `UIImage` from ImageAsset defined in given `Bundle`
+	///
+	/// - Note: `Image`s initialized with this initializer, will not be sent **directly** to `ImageScheme`. In `ImageScheme`
+	/// read `name` variable to determine what to do.
+	///
 	/// - Parameter name: Name of the image to look-up in Assets Catalog
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsImageScheme`
@@ -316,8 +319,8 @@ extension UIImage {
 	/// Will fetch `UIImage` defined in given `ImageScheme`
 	///
 	/// - Parameter image: `Image`
-	/// - Parameter scheme: `ImageScheme` to search for image. (default: `Styled.defaultImageScheme`)
-	open class func styled(_ image: Image, from scheme: ImageScheme = Styled.defaultImageScheme) -> UIImage? {
+	/// - Parameter scheme: `ImageScheme` to search for image. (default: `Config.imageScheme`)
+	open class func styled(_ image: Image, from scheme: ImageScheme = Config.imageScheme) -> UIImage? {
 		image.resolve(from: scheme)
 	}
 }
@@ -325,7 +328,7 @@ extension UIImage {
 // MARK:- StyledWrapper
 extension StyledWrapper {
 	
-	/// Will get called when  `defaultImageSchemeDidChangeNotification` is raised or `applyImages()` is called or `currentImageScheme` changes
+	/// Will get called when  `Config.imageSchemeDidChange` is raised or `applyImages()` is called or `currentImageScheme` changes
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`

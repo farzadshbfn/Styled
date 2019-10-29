@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1F50AE39C43233C86957340E /* Pods_StyledTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD87711964D1103EDCEBC47B /* Pods_StyledTests.framework */; };
 		3ED69ADF072FBB47672C8FE5 /* Pods_SampleModule.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74A17FCCAA2A9DB1A9E04BB7 /* Pods_SampleModule.framework */; };
+		E22305F4236900D30070E1E6 /* StyledConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E22305F3236900D30070E1E6 /* StyledConfigTests.swift */; };
 		E295CCA8235BA07D00090943 /* SampleModule.h in Headers */ = {isa = PBXBuildFile; fileRef = E295CCA6235BA07D00090943 /* SampleModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E295CCAB235BA07D00090943 /* SampleModule.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E295CCA4235BA07D00090943 /* SampleModule.framework */; };
 		E295CCAC235BA07D00090943 /* SampleModule.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E295CCA4235BA07D00090943 /* SampleModule.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -70,6 +71,7 @@
 		A55282A8A045EDCCDDB7EB2C /* Pods-StyledTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StyledTests.release.xcconfig"; path = "Target Support Files/Pods-StyledTests/Pods-StyledTests.release.xcconfig"; sourceTree = "<group>"; };
 		AD87711964D1103EDCEBC47B /* Pods_StyledTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_StyledTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C3103D9CF2B21BCF07DC6833 /* Pods_Core.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Core.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E22305F3236900D30070E1E6 /* StyledConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyledConfigTests.swift; sourceTree = "<group>"; };
 		E295CCA4235BA07D00090943 /* SampleModule.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SampleModule.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E295CCA6235BA07D00090943 /* SampleModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleModule.h; sourceTree = "<group>"; };
 		E295CCA7235BA07D00090943 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -202,6 +204,7 @@
 				E2CC1064235F9EBA000896B3 /* FontTests.swift */,
 				E2CC1062235F9E9B000896B3 /* ImageTests.swift */,
 				E2E82B1A2358D026003E1DAE /* StyledTests.swift */,
+				E22305F3236900D30070E1E6 /* StyledConfigTests.swift */,
 			);
 			path = StyledTests;
 			sourceTree = "<group>";
@@ -478,6 +481,7 @@
 			files = (
 				E2E82B1B2358D026003E1DAE /* StyledTests.swift in Sources */,
 				E2CC1063235F9E9B000896B3 /* ImageTests.swift in Sources */,
+				E22305F4236900D30070E1E6 /* StyledConfigTests.swift in Sources */,
 				E2E82B19235881BD003E1DAE /* ColorTests.swift in Sources */,
 				E2CC1065235F9EBA000896B3 /* FontTests.swift in Sources */,
 			);
