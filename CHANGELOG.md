@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `StyledColor`, `StyledColorScheme`, `Styled`, `StyledUpdate`
+- `Color`, `ColorScheme`, `Styled`, `StyledUpdate`
 
 [Unreleased]: https://github.com/farzadshbfn/styled/compare/0.1.0...master
 [0.1.0]: https://github.com/farzadshbfn/Styled/releases/tag/0.1.0

@@ -1,5 +1,5 @@
 //
-//  StyledImageTests.swift
+//  ImageTests.swift
 //  StyledTests
 //
 //  Created by Farzad Sharbafian on 10/23/19.
@@ -10,17 +10,17 @@ import XCTest
 @testable import Styled
 import Nimble
 
-extension StyledImage {
+extension Image {
 	fileprivate static let profile: Self = "profile"
 	fileprivate static let profileFill: Self = "profile.fill"
 	fileprivate static let profileMulti: Self = "profile.multi"
 }
 
-class StyledImageTests: XCTestCase {
+class ImageTests: XCTestCase {
 	
-	struct TestScheme: StyledImageScheme {
-		func image(for styledImage: StyledImage) -> UIImage? {
-			switch styledImage {
+	struct TestScheme: ImageScheme {
+		func image(for image: Image) -> UIImage? {
+			switch image {
 			case .profileMulti: return #imageLiteral(resourceName: "profile.multi")
 			case .profileFill: return #imageLiteral(resourceName: "profile.fill")
 			case .profile: return #imageLiteral(resourceName: "profile")
@@ -30,7 +30,7 @@ class StyledImageTests: XCTestCase {
 	}
 
     override func setUp() {
-		StyledImage.isPrefixMatchingEnabled = true
+		Image.isPrefixMatchingEnabled = true
 	}
 
     override func tearDown() {
@@ -38,12 +38,12 @@ class StyledImageTests: XCTestCase {
 	}
 	
 	func testName() {
-		expect(StyledImage.profile.name) == "profile"
-		expect(StyledImage.profile.renderingMode(.automatic).name).to(beNil())
+		expect(Image.profile.name) == "profile"
+		expect(Image.profile.renderingMode(.automatic).name).to(beNil())
 	}
 	
 	func testPatternMatcherSetting() {
-		StyledImage.isPrefixMatchingEnabled = false
+		Image.isPrefixMatchingEnabled = false
 		
 		expect(.profile ~= .profileFill) == false
 		expect(.profileFill ~= .profile) == false
@@ -68,12 +68,12 @@ class StyledImageTests: XCTestCase {
 		expect(.profileFill ~= .profileFill) == true
 		expect(.profileMulti ~= .profileMulti) == true
 		
-		switch StyledImage.profileMulti {
+		switch Image.profileMulti {
 		case .profile: break
 		default: fail("profile case should be matched")
 		}
 		
-		switch StyledImage.profile {
+		switch Image.profile {
 		case .profileFill, .profileMulti: fail("non of these cases should be matched")
 		default: break
 		}
@@ -82,9 +82,9 @@ class StyledImageTests: XCTestCase {
 	func testLazy() {
 		Styled.defaultImageScheme = TestScheme()
 		
-		let lazy1 = StyledImage.Lazy(.profile)
-		let lazy2 = StyledImage.Lazy(.profile)
-		let lazy3 = StyledImage.Lazy(.profileFill)
+		let lazy1 = Image.Lazy(.profile)
+		let lazy2 = Image.Lazy(.profile)
+		let lazy3 = Image.Lazy(.profileFill)
 
 		expect(lazy1) == lazy2
 		expect(lazy1) != lazy3
@@ -94,17 +94,17 @@ class StyledImageTests: XCTestCase {
 	}
 	
 	func testDescriptions() {
-		expect(StyledImage.profile.description) == "profile"
-		expect("\(StyledImage.profile)") == "profile"
+		expect(Image.profile.description) == "profile"
+		expect("\(Image.profile)") == "profile"
 		
-		expect(StyledImage.renderingMode(.alwaysTemplate, of: .profileMulti).description) == "{profile.multi(alwaysTemplate)}"
-		expect(StyledImage.renderingMode(.alwaysOriginal, of: .profileMulti).description) == "{profile.multi(alwaysOriginal)}"
-		expect(StyledImage.renderingMode(.automatic, of: .profileMulti).description) == "{profile.multi(automatic)}"
-		expect(StyledImage.profileFill.transform { $0 }.description) == "{profile.fill->t}"
-		expect(StyledImage.profile.transform(named: "custom") { $0 }.description) == "{profile->custom}"
+		expect(Image.renderingMode(.alwaysTemplate, of: .profileMulti).description) == "{profile.multi(2)}"
+		expect(Image.renderingMode(.alwaysOriginal, of: .profileMulti).description) == "{profile.multi(1)}"
+		expect(Image.renderingMode(.automatic, of: .profileMulti).description) == "{profile.multi(0)}"
+		expect(Image.profileFill.transform { $0 }.description) == "{profile.fill->t}"
+		expect(Image.profile.transform(named: "custom") { $0 }.description) == "{profile->custom}"
 		
-		expect(StyledImage("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
-		expect(StyledImage("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
+		expect(Image("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
+		expect(Image("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
 	}
 	
 	func testLoad() {
@@ -128,25 +128,25 @@ class StyledImageTests: XCTestCase {
 		
 		expect(UIImage.styled(.renderingMode(.alwaysOriginal, of: .profile))) != UIImage(named: "profile")?.withRenderingMode(.alwaysTemplate)
 		
-		expect(StyledImage.renderingMode(.alwaysOriginal, of: .profile)) == StyledImage.profile.renderingMode(.alwaysOriginal)
+		expect(Image.renderingMode(.alwaysOriginal, of: .profile)) == Image.profile.renderingMode(.alwaysOriginal)
 		
-		expect(UIImage.styled(StyledImage("notDefined").renderingMode(.alwaysTemplate))).to(beNil())
+		expect(UIImage.styled(Image("notDefined").renderingMode(.alwaysTemplate))).to(beNil())
 	}
 	
 	
 	func testTransform() {
 		Styled.defaultImageScheme = TestScheme()
 		
-		expect(UIImage.styled(StyledImage.profile.transform(named: "renderMode", { $0.withRenderingMode(.alwaysTemplate) }))) == UIImage(named: "profile")?.withRenderingMode(.alwaysTemplate)
+		expect(UIImage.styled(Image.profile.transform(named: "renderMode", { $0.withRenderingMode(.alwaysTemplate) }))) == UIImage(named: "profile")?.withRenderingMode(.alwaysTemplate)
 		
-		expect(StyledImage.renderingMode(.alwaysOriginal, of: .profile)) == StyledImage.profile.renderingMode(.alwaysOriginal)
+		expect(Image.renderingMode(.alwaysOriginal, of: .profile)) == Image.profile.renderingMode(.alwaysOriginal)
 		
 		expect(UIImage.styled(.transforming("notDefined") { $0 } )).to(beNil())
 	}
 	
 	func testAssetsCatalog() {
-		Styled.defaultImageScheme = UIImage.StyledAssetCatalog()
-		StyledImage.isPrefixMatchingEnabled = false
+		Styled.defaultImageScheme = UIImage.AssetCatalog()
+		Image.isPrefixMatchingEnabled = false
 		
 		expect(UIImage.styled(.profile)) == #imageLiteral(resourceName: "profile")
 		expect(UIImage.styled(.profileFill)) == #imageLiteral(resourceName: "profile.fill")
@@ -154,8 +154,13 @@ class StyledImageTests: XCTestCase {
 		expect(UIImage.styled("profile.multi.fill")) == #imageLiteral(resourceName: "profile.multi")
 
 		// test Bundle load
-		let image = StyledImage("sampleModule.profile.multi.fill", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
+		let image = Image("sampleModule.profile.multi.fill", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
 		
 		expect(UIImage.styled(image)) == UIImage(named: "sampleModule.profile.multi.fill", in: Bundle(identifier: "com.farzadshbfn.SampleModule"), with: nil)
+	}
+	
+	func testTypealises() {
+		expect(StyledImage.self == Image.self) == true
+		expect(StyledImageScheme.self == ImageScheme.self) == true
 	}
 }

@@ -1,5 +1,5 @@
 //
-//  StyledColorTests.swift
+//  ColorTests.swift
 //  StyledTests
 //
 //  Created by Farzad Sharbafian on 10/17/19.
@@ -10,18 +10,18 @@ import XCTest
 @testable import Styled
 import Nimble
 
-extension StyledColor {
+extension Color {
 	fileprivate static let primary: Self = "primary"
 	fileprivate static let primary1: Self = "primary.lvl1"
 	fileprivate static let primary2: Self = "primary.lvl2"
 	
 }
 
-class StyledColorTests: XCTestCase {
+class ColorTests: XCTestCase {
 	
-	struct TestScheme: StyledColorScheme {
-		func color(for styledColor: StyledColor) -> UIColor? {
-			switch styledColor {
+	struct TestScheme: ColorScheme {
+		func color(for color: Color) -> UIColor? {
+			switch color {
 			case .primary1: return .green
 			case .primary2: return .blue
 			case .primary: return .red
@@ -31,7 +31,7 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	override func setUp() {
-		StyledColor.isPrefixMatchingEnabled = true
+		Color.isPrefixMatchingEnabled = true
 	}
 	
 	override func tearDown() {
@@ -39,12 +39,12 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testName() {
-		expect(StyledColor.primary.name) == "primary"
-		expect(StyledColor.primary.opacity(1.00).name).to(beNil())
+		expect(Color.primary.name) == "primary"
+		expect(Color.primary.opacity(1.00).name).to(beNil())
 	}
 	
 	func testPatternMatcherSetting() {
-		StyledColor.isPrefixMatchingEnabled = false
+		Color.isPrefixMatchingEnabled = false
 		
 		expect(.primary ~= .primary2) == false
 		expect(.primary2 ~= .primary) == false
@@ -66,21 +66,21 @@ class StyledColorTests: XCTestCase {
 		expect(.primary1 ~= .primary1) == true
 		expect(.primary2 ~= .primary2) == true
 		
-		switch StyledColor.primary2 {
+		switch Color.primary2 {
 		case .primary: break
 		default: fail("primary case should be matched")
 		}
 		
-		switch StyledColor.primary {
+		switch Color.primary {
 		case .primary1, .primary2: fail("non of these cases should be matched")
 		default: break
 		}
 	}
 	
 	func testLazy() {
-		let lazy1 = StyledColor.Lazy(.primary)
-		let lazy2 = StyledColor.Lazy(.primary)
-		let lazy3 = StyledColor.Lazy(.primary1)
+		let lazy1 = Color.Lazy(.primary)
+		let lazy2 = Color.Lazy(.primary)
+		let lazy3 = Color.Lazy(.primary1)
 		
 		expect(lazy1) == lazy2
 		expect(lazy1) != lazy3
@@ -88,19 +88,19 @@ class StyledColorTests: XCTestCase {
 	}
 	
 	func testDescriptions() {
-		expect(StyledColor.primary.description) == "primary"
-		expect("\(StyledColor.primary)") == "primary"
+		expect(Color.primary.description) == "primary"
+		expect("\(Color.primary)") == "primary"
 		
-		expect(StyledColor.blending(.primary, 0.3, with: .primary2).description) == "{primary*0.30+primary.lvl2*0.70}"
-		expect(StyledColor.blending(.primary, 0.3, with: UIColor.black).description) == "{primary*0.30+UIColor(0.00 0.00 0.00 1.00)*0.70}"
-		expect(StyledColor.opacity(0.4, of: .primary).description) == "{primary(0.40)}"
-		expect(StyledColor.transforming(.primary) { $0 }.description) == "{primary->t}"
-		expect(StyledColor.transforming(.primary, named: "custom") { $0 }.description) == "{primary->custom}"
+		expect(Color.blending(.primary, 0.3, with: .primary2).description) == "{primary*0.30+primary.lvl2*0.70}"
+		expect(Color.blending(.primary, 0.3, with: UIColor.black).description) == "{primary*0.30+(UIExtendedGrayColorSpace 0 1)*0.70}"
+		expect(Color.opacity(0.4, of: .primary).description) == "{primary(0.40)}"
+		expect(Color.transforming(.primary) { $0 }.description) == "{primary->t}"
+		expect(Color.transforming(.primary, named: "custom") { $0 }.description) == "{primary->custom}"
 		
 		if #available(iOS 11, *) {
-			expect(StyledColor("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
+			expect(Color("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
 			
-			expect(StyledColor("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
+			expect(Color("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
 		}
 	}
 	
@@ -118,7 +118,7 @@ class StyledColorTests: XCTestCase {
 		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(.blending(.primary, with: .primary1))) == .init(red: 0.5, green: 0.5, blue: 0.0, alpha: 1.0)
-		expect(UIColor.styled(StyledColor.primary.blend(0.1, with: UIColor.black))) == .init(red: 0.1, green: 0.0, blue: 0.0, alpha: 1.0)
+		expect(UIColor.styled(Color.primary.blend(0.1, with: UIColor.black))) == .init(red: 0.1, green: 0.0, blue: 0.0, alpha: 1.0)
 		
 		expect(UIColor.styled(.blending("notDefined", with: .black))) == .black
 		expect(UIColor.styled(.blending(.blending("notDefined", with: .black), with: "notDefiend"))) == .black
@@ -128,7 +128,7 @@ class StyledColorTests: XCTestCase {
 		Styled.defaultColorScheme = TestScheme()
 		
 		expect(UIColor.styled(.opacity(0.25, of: .primary2))) == .init(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.25)
-		expect(UIColor.styled(.primary)?.withAlphaComponent(0.5)) == .styled(StyledColor.primary.opacity(0.5))
+		expect(UIColor.styled(.primary)?.withAlphaComponent(0.5)) == .styled(Color.primary.opacity(0.5))
 		
 		expect(UIColor.styled(.opacity(0.5, of: "notDefined"))).to(beNil())
 	}
@@ -136,18 +136,18 @@ class StyledColorTests: XCTestCase {
 	func testTransform() {
 		Styled.defaultColorScheme = TestScheme()
 		
-		expect(UIColor.styled(StyledColor.primary.transform(named: "blend") { $0.blend(with: .black) })) == .init(red: 0.5, green: 0.0, blue: 0.0, alpha: 1.0)
+		expect(UIColor.styled(Color.primary.transform(named: "blend") { $0.blend(with: .black) })) == .init(red: 0.5, green: 0.0, blue: 0.0, alpha: 1.0)
 		
-		expect(StyledColor.primary.transform { $0 }) == .transforming(.primary) { $0 }
-		expect(StyledColor.primary.transform(named: "c") { $0 }) == .transforming(.primary, named: "c") { $0 }
-		expect(StyledColor.primary.transform { $0 }) != .transforming(.primary, named: "c") { $0 }
+		expect(Color.primary.transform { $0 }) == .transforming(.primary) { $0 }
+		expect(Color.primary.transform(named: "c") { $0 }) == .transforming(.primary, named: "c") { $0 }
+		expect(Color.primary.transform { $0 }) != .transforming(.primary, named: "c") { $0 }
 		
 		expect(UIColor.styled(.transforming("notDefined") { $0 })).to(beNil())
 	}
 	
 	func testAssetsCatalog() {
 		if #available(iOS 11, *) {
-			Styled.defaultColorScheme = UIColor.StyledAssetCatalog()
+			Styled.defaultColorScheme = UIColor.AssetCatalog()
 			
 			expect(UIColor.styled("red.primary")) == .red
 			// lvl1 does not exist. should match to `red.primary`
@@ -155,13 +155,18 @@ class StyledColorTests: XCTestCase {
 			// blue does not exist at all
 			expect(UIColor.styled("blue.primary.lvl1")).to(beNil())
 			
-			StyledColor.isPrefixMatchingEnabled = false
+			Color.isPrefixMatchingEnabled = false
 			// lvl1 does not exist. should NOT match to `red.primary`
 			expect(UIColor.styled("red.primary.lvl1")).to(beNil())
 			
 			// test Bundle load
-			let color = StyledColor("sampleModule.blue.primary", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
+			let color = Color("sampleModule.blue.primary", bundle: Bundle(identifier: "com.farzadshbfn.SampleModule")!)
 			expect(UIColor.styled(color)) == .blue
 		}
+	}
+	
+	func testTypealises() {
+		expect(StyledColor.self == Color.self) == true
+		expect(StyledColorScheme.self == ColorScheme.self) == true
 	}
 }

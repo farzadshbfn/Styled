@@ -8,12 +8,12 @@
 import Foundation
 import class UIKit.UIFont
 
-// MARK:- StyledFont
-/// Used to fetch font on runtime based on current `StyledFontScheme`
+// MARK:- Font
+/// Used to fetch font on runtime based on current `FontScheme`
 ///
 /// Sample usage:
 ///
-///  	extension StyledFont {
+///  	extension Font {
 ///  		static let title    = Self(.headline, weight: .bold)
 ///  		static let subtitle = Self(.subheadline, weight: .light)
 ///  		static let body     = Self(.body)
@@ -22,144 +22,124 @@ import class UIKit.UIFont
 ///  	label.styled.font = .title
 ///  	label.styled.font = .init(.body, weight: .ultraLight)
 ///
-public struct StyledFont: Hashable, CustomStringConvertible {
+public struct Font: Hashable, CustomStringConvertible {
 	
-	/// This type is used internally to manage transformations if applied to current `StyledFont` before fetching `UIFont`
+	/// Mirroring `UIFont.TextStyle` for compatibility
+	public typealias TextStyle = UIFont.TextStyle
+	
+	/// Mirroring `UIFont.Weight` for compatibility
+	public typealias Weight = UIFont.Weight
+	
+	/// This type is used internally to manage transformations if applied to current `Font` before fetching `UIFont`
 	let resolver: Resolver
 	
-	/// Initiates a `StyledFont` with specifications given to be fetched later
+	/// Initiates a `Font` with specifications given to be fetched later
 	///
 	/// - Parameter size: `Font.Size` instance to specify size of the Font
 	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-	public init(size: Font.Size, weight: Font.Weight = .regular) {
-		resolver = .font(.init(size: size, weight: weight))
+	public init(size: Size, weight: Weight = .regular) {
+		resolver = .font(size: size, weight: weight)
 	}
 	
-	/// Initiates a `StyledFont` with specifications given to be fetched later
+	/// Initiates a `Font` with specifications given to be fetched later
 	///
 	/// - Parameter textStyle: `UIFont.TextStyle` instance
 	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-	public init(_ textStyle: UIFont.TextStyle, weight: Font.Weight = .regular) {
-		resolver = .font(.init(textStyle, weight: weight))
+	public init(_ textStyle: TextStyle, weight: Weight = .regular) {
+		resolver = .font(size: .dynamic(textStyle), weight: weight)
 	}
 	
-	/// Initiates a `StyledFont` with specifications given to be fetched later
+	/// Initiates a `Font` with specifications given to be fetched later
 	///
 	/// - Parameter size: Font's `pointSize`
 	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-	public init(_ size: CGFloat, weight: Font.Weight = .regular) {
-		resolver = .font(.init(size, weight: weight))
+	public init(_ size: CGFloat, weight: Weight = .regular) {
+		resolver = .font(size: .static(size), weight: weight)
 	}
 	
-	/// Font of the `StyledFont`.
+	/// Size of the `Font`.
 	///
-	/// - Note: This field is optional because there might be transformations applied to this `StyledFont`, hence no specific `font` is available
+	/// - Note: This field is optional because there might be transformations applied to this `Font`, hence no specific `size` is available
 	///
-	public var font: Font? {
+	public var size: Size? {
 		switch resolver {
-		case .font(let font): return font
+		case .font(let size, _): return size
+		default: return nil
+		}
+	}
+	
+	/// Weight of the `Font`.
+	///
+	/// - Note: This field is optional because there might be transformations applied to this `Font`, hence no specific `weight` is available
+	///
+	public var weight: Weight? {
+		switch resolver {
+		case .font(_, let weight): return weight
+		default: return nil
+		}
+	}
+	
+	/// size and weight of the `Font`.
+	///
+	/// - Note: This field is optional because there might be transformations applied to this `Font`, hence no specific `size` and `weight` are available
+	///
+	public var sizeAndWeight: (size: Size, weight: Weight)? {
+		switch resolver {
+		case .font(let size, let weight): return (size, weight)
 		default: return nil
 		}
 	}
 	
 	/// Describes specification of `UIFont` that will be *fetched*/*generated*
 	///
-	///  - Note: `StyledFont`s with transformations will not be sent to `StyledFontScheme`s directly
+	///  - Note: `Font`s with transformations will not be sent to `FontScheme`s directly
 	///
 	///  Samples:
 	///
-	/// 	StyledFont(42)
-	/// 	// description: "regular-42"
-	/// 	StyledFont(.body, weight: .bold)
-	/// 	// description: "bold-title1"
-	/// 	StyledFont(.title1).transform { $0 }
-	/// 	// description:  "{regular-title1->t}"
+	/// 	Font(42)
+	/// 	// description: "42(0.0)"
+	/// 	Font(.body, weight: .bold)
+	/// 	// description: "UICTFontTextStyleBody(0.4000000059604645)"
+	/// 	Font(.title1).transform { $0 }
+	/// 	// description:  "{UICTFontTextStyleTitle1(0.0)->t}"
 	///
 	public var description: String { resolver.description }
 }
 
 
-extension StyledFont {
+extension Font {
 	
-	/// Specification of the `UIFont` that needs to be fetched by `TextStyle` and `Weight` parameters
-	public struct Font: Hashable, CustomStringConvertible {
+	/// Identifies wether the font needs to be static or dynamically managed by fontSizeCategory of system
+	public enum Size: Hashable, CustomStringConvertible {
+		/// Explicit size
+		case `static`(CGFloat)
+		/// Dynamic size based on device (or managed in application) sizes
+		case dynamic(TextStyle)
 		
-		/// Mirroring `UIFont.TextStyle` for compatibility
-		public typealias TextStyle = UIFont.TextStyle
-		
-		/// Mirroring `UIFont.Weight` for compatibility
-		public typealias Weight = UIFont.Weight
-		
-		/// Holds `Size` information for the font to be fetched
-		public let size: Size
-		
-		/// Holds `Weight` information for the font to be fetched
-		public let weight: Weight
-		
-		/// - Parameter size: `Size` instance to specify size of the Font
-		/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-		public init(size: Size, weight: Weight = .regular) {
-			self.size = size
-			self.weight = weight
-		}
-		
-		/// - Parameter textStyle: `UIFont.TextStyle` instance
-		/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-		public init(_ textStyle: TextStyle, weight: Weight = .regular) {
-			self.size = .dynamic(textStyle)
-			self.weight = weight
-		}
-		
-		/// - Parameter size: Font's `pointSize`
-		/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-		public init(_ size: CGFloat, weight: Weight = .regular) {
-			self.size = .static(size)
-			self.weight = weight
-		}
-		
-		/// Describes weight and size of the given Font
+		/// Describes given value
 		///
-		/// 	Font(42)
-		/// 	// description: regular-42
-		/// 	Font(42, weight: .bold)
-		/// 	// description: bold-42
-		/// 	Font(.title1, weight: .init(rawValue: 0.17)
-		/// 	// description: (0.17)-title1
+		/// 	Size.static(42)
+		/// 	// description: "42"
+		/// 	Size.dynamic(.title1)
+		/// 	// description: "UICTFontTextStyleTitle1"
 		///
-		public var description: String { "\(weight.styledDescription)-\(size.description)" }
+		public var description: String {
+			switch self {
+			case .static(let size): return "\(size)"
+			case .dynamic(let style): return "\(style.rawValue)"
+			}
+		}
 		
-		/// Identifies wether the font needs to be static or dynamically managed by fontSizeCategory of system
-		public enum Size: Hashable, CustomStringConvertible {
-			/// Explicit size
-			case `static`(CGFloat)
-			/// Dynamic size based on device (or managed in application) sizes
-			case dynamic(TextStyle)
-			
-			/// Describes given value
-			///
-			/// 	Size.static(42)
-			/// 	// description: "42"
-			/// 	Size.dynamic(.title1)
-			/// 	// description: "title1"
-			///
-			public var description: String {
-				switch self {
-				case .static(let size): return "\(size)"
-				case .dynamic(let style): return "\(style)"
-				}
-			}
-			
-			/// This method is used internally to manage transformations (if any) and provide `CGFloat` as size of `UIFont`
-			/// - Parameter scheme:A `StyledFontScheme` to fetch `CGFloat` from
-			func resolve(from scheme: StyledFontScheme) -> CGFloat {
-				scheme.size(for: self)
-			}
+		/// This method is used internally to manage transformations (if any) and provide `CGFloat` as size of `UIFont`
+		/// - Parameter scheme:A `FontScheme` to fetch `CGFloat` from
+		func resolve(from scheme: FontScheme) -> CGFloat {
+			scheme.size(for: self)
 		}
 	}
 	
 	/// Internal type to manage Lazy or direct fetching of `UIFont`
 	enum Resolver: Hashable, CustomStringConvertible {
-		case font(Font)
+		case font(size: Size, weight: Weight)
 		case lazy(Lazy)
 		
 		/// Contains description of current `Resolver` state.
@@ -168,14 +148,14 @@ extension StyledFont {
 		///
 		var description: String {
 			switch self {
-			case .font(let font): return font.description
+			case .font(let size, let weight): return "\(size.description)(\(weight.rawValue))"
 			case .lazy(let lazy): return "{\(lazy)}"
 			}
 		}
 	}
 	
 	struct Lazy: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `StyledFont` in order to let `StyledFont` hold `Lazy` in its definition
+		/// Is generated on `init`, to keep the type Hashable and hide `Font` in order to let `Font` hold `Lazy` in its definition
 		let fontHashValue: Int
 		
 		/// Describes current font that will be returned
@@ -184,8 +164,8 @@ extension StyledFont {
 		/// Describes current font that will be returned
 		var description: String { fontDescription }
 		
-		/// Provides `UIFont` which can be backed by `StyledFont`
-		let font: (_ scheme: StyledFontScheme) -> UIFont?
+		/// Provides `UIFont` which can be backed by `Font`
+		let font: (_ scheme: FontScheme) -> UIFont?
 		
 		/// Used internally to pre-calculate hashValue of Internal `font`
 		private static func hashed<H: Hashable>(_ category: String, _ value: H) -> Int {
@@ -195,16 +175,16 @@ extension StyledFont {
 			return hasher.finalize()
 		}
 		
-		/// Will load `UIFont` from `StyledFont` when needed
-		init(_ styledFont: StyledFont) {
-			fontHashValue = Self.hashed("StyledFont", styledFont)
-			fontDescription = styledFont.description
-			font = styledFont.resolve
+		/// Will load `UIFont` from `Font` when needed
+		init(_ font: Font) {
+			fontHashValue = Self.hashed("Font", font)
+			fontDescription = font.description
+			self.font = font.resolve
 		}
 		
 		/// Will use custom Provider to provide `UIFont` when needed
 		/// - Parameter name: Will be used as `description` and inside hash-algorithms
-		init(name: String, _ fontProvider: @escaping (_ scheme: StyledFontScheme) -> UIFont?) {
+		init(name: String, _ fontProvider: @escaping (_ scheme: FontScheme) -> UIFont?) {
 			fontHashValue = Self.hashed("FontProvider", name)
 			fontDescription = name
 			font = fontProvider
@@ -218,54 +198,54 @@ extension StyledFont {
 	}
 	
 	/// This method is used internally to manage transformations (if any) and provide `UIFont`
-	/// - Parameter scheme:A `StyledFontScheme` to fetch `UIFont` from
-	func resolve(from scheme: StyledFontScheme) -> UIFont? {
+	/// - Parameter scheme:A `FontScheme` to fetch `UIFont` from
+	func resolve(from scheme: FontScheme) -> UIFont? {
 		switch resolver {
 		case .font: return scheme.font(for: self)
 		case .lazy(let lazy): return lazy.font(scheme)
 		}
 	}
 	
-	/// Enables `StyledFont` to accept transformations
+	/// Enables `Font` to accept transformations
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
 	/// Applies custom transformations on the `UIFont`
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIFont`
-	public func transform(named name: String = "t", _ transform: @escaping (UIFont) -> UIFont) -> StyledFont {
+	public func transform(named name: String = "t", _ transform: @escaping (UIFont) -> UIFont) -> Font {
 		return .init(lazy: .init(name: "\(name)->\(self)", { scheme in
 			guard let font = self.resolve(from: scheme) else { return nil }
 			return transform(font)
 		}))
 	}
 	
-	/// Applies custom transformations on the `UIFont` fetched from `StyledFont`
-	/// - Parameter styledFont: `StyledFont` to fetch
+	/// Applies custom transformations on the `UIFont` fetched from `Font`
+	/// - Parameter font: `Font` to fetch
 	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
 	/// - Parameter transform: Apply transformation before providing the `UIFont`
-	public static func transforming(_ styledFont: StyledFont,
+	public static func transforming(_ font: Font,
 									named name: String = "t",
-									_ transform: @escaping (UIFont) -> UIFont) -> StyledFont {
-		styledFont.transform(named: name, transform)
+									_ transform: @escaping (UIFont) -> UIFont) -> Font {
+		font.transform(named: name, transform)
 	}
 }
 
-// MARK:- StyledFontScheme
+// MARK:- FontScheme
 /// Use this protocol to provide `UIFont` for `Styled`
 ///
 /// Sample:
 ///
-/// 	struct LatinoFontScheme: StyledFontScheme {
-/// 	    func font(for styledFont: StyledFont) -> UIFont? {
-/// 	        switch styledFont {
+/// 	struct LatinoFontScheme: FontScheme {
+/// 	    func font(for font: Font) -> UIFont? {
+/// 	        switch font {
 /// 	        case .title: // return UIFont for all titles in latino localization
 /// 	        case .subtitle: // return UIFont for all subtitles in latino localization
-/// 	        default: latinoFont(weight: styledFont.font!.weight).withSize(size(for: styledFont.font!.size))
+/// 	        default: latinoFont(weight: font.font!.weight).withSize(size(for: font.font!.size))
 /// 	        }
 /// 	    }
 ///
-/// 	    func size(for size: StyledFont.Font.Size) -> CGFloat {
+/// 	    func size(for size: Font.Font.Size) -> CGFloat {
 /// 	    	switch size {
 /// 	    	case .static(let size): return size
 /// 	    	// In dynamic case we need to adjust system font for latino fonts
@@ -278,30 +258,30 @@ extension StyledFont {
 /// 	    }
 /// 	}
 ///
-public protocol StyledFontScheme {
+public protocol FontScheme {
 	
 	/// `Styled` will use this method to fetch `UIFont`
 	///
 	/// - Important: **Do not** call this method directly. use `UIFont.styled(_:)` instead.
 	///
-	/// - Note: Unlike `StyledColorScheme` & `StyledFontScheme` its good to return a `UIFont` with given `size` and `weight`
+	/// - Note: Unlike `ColorScheme` & `FontScheme` its good to return a `UIFont` with given `size` and `weight`
 	///
-	/// - Note: It's guaranteed all `StyledFont`s sent to this message, will contain field `font`
+	/// - Note: It's guaranteed all `Font`s sent to this message, will contain field `font`
 	///
 	/// Sample for `LatinoFontScheme`:
 	///
-	/// 	struct LatinoFontScheme: StyledFontScheme {
-	/// 	    func font(for styledFont: StyledFont) -> UIFont? {
-	/// 	        switch styledFont {
+	/// 	struct LatinoFontScheme: FontScheme {
+	/// 	    func font(for font: Font) -> UIFont? {
+	/// 	        switch font {
 	/// 	        case .title: // return UIFont for all titles in latino localization
 	/// 	        case .subtitle: // return UIFont for all subtitles in latino localization
-	/// 	        default: latinoFont(weight: styledFont.font!.weight).withSize(size(for: styledFont.font!.size))
+	/// 	        default: latinoFont(weight: font.font!.weight).withSize(size(for: font.font!.size))
 	/// 	        }
 	/// 	    }
 	/// 	}
 	///
-	/// - Parameter styledFont: `StyledFont` type to fetch `UIFont` from current scheme
-	func font(for styledFont: StyledFont) -> UIFont?
+	/// - Parameter font: `Font` type to fetch `UIFont` from current scheme
+	func font(for font: Font) -> UIFont?
 	
 	/// `Styled` will use this method to fetch suitable `pointSize` for `UIFont`
 	///
@@ -309,8 +289,8 @@ public protocol StyledFontScheme {
 	///
 	/// Sample for `LatinoFontScheme`:
 	///
-	/// 	struct LatinoFontScheme: StyledFontScheme {
-	/// 	    func size(for size: StyledFont.Font.Size) -> CGFloat {
+	/// 	struct LatinoFontScheme: FontScheme {
+	/// 	    func size(for size: Font.Font.Size) -> CGFloat {
 	/// 	    	switch size {
 	/// 	    	case .static(let size): return size
 	/// 	    	// In dynamic case we need to adjust system font for latino fonts
@@ -319,21 +299,21 @@ public protocol StyledFontScheme {
 	/// 	    }
 	/// 	}
 	///
-	/// - Parameter size: `StyledFont.Font.Size`
-	func size(for size: StyledFont.Font.Size) -> CGFloat
+	/// - Parameter size: `Font.Font.Size`
+	func size(for size: Font.Size) -> CGFloat
 }
 
 // MARK:- SystemFontCategory
 extension UIFont {
 	
-	/// Will fetch `StyledFont`s from system font size category
-	public struct StyledSystemFontCategory: StyledFontScheme {
+	/// Will fetch `Font`s from system font size category
+	public struct SystemFontCategory: FontScheme {
 		
-		public func font(for styledFont: StyledFont) -> UIFont? {
-			.systemFont(ofSize: size(for: styledFont.font!.size), weight: styledFont.font!.weight)
+		public func font(for font: Font) -> UIFont? {
+			.systemFont(ofSize: size(for: font.size!), weight: font.weight!)
 		}
 
-		public func size(for size: StyledFont.Font.Size) -> CGFloat {
+		public func size(for size: Font.Size) -> CGFloat {
 			switch size {
 			case .static(let size): return size
 			case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize
@@ -345,63 +325,27 @@ extension UIFont {
 // MARK:- UIFont+Extensions
 extension UIFont {
 	
-	/// Will fetch `UIFont` defined in given `StyledFontScheme`
+	/// Will fetch `UIFont` defined in given `FontScheme`
 	///
-	/// - Parameter styledFont: `StyledFont`
-	/// - Parameter scheme: `StyledFontScheme` to search for font. (default: `Styled.defaultFontScheme`)
-	open class func styled(_ styledFont: StyledFont, from scheme: StyledFontScheme = Styled.defaultFontScheme) -> UIFont? {
-		styledFont.resolve(from: scheme)
+	/// - Parameter font: `Font`
+	/// - Parameter scheme: `FontScheme` to search for font. (default: `Styled.defaultFontScheme`)
+	open class func styled(_ font: Font, from scheme: FontScheme = Styled.defaultFontScheme) -> UIFont? {
+		font.resolve(from: scheme)
 	}
 	
-	/// Will fetch suitable `pointSize` for given `StyledFont.Font.Size` defined in given `StyledFontScheme`
+	/// Will fetch suitable `pointSize` for given `Font.Font.Size` defined in given `FontScheme`
 	///
-	/// - Parameter size: `StyledFont.Font.Size`
-	/// - Parameter scheme: `StyledFontScheme` to search for suitable pointSize. (default: `Styled.defaultFontScheme`
-	open class func preferedFontSize(for size: StyledFont.Font.Size, from scheme: StyledFontScheme = Styled.defaultFontScheme) -> CGFloat {
+	/// - Parameter size: `Font.Font.Size`
+	/// - Parameter scheme: `FontScheme` to search for suitable pointSize. (default: `Styled.defaultFontScheme`
+	open class func preferedFontSize(for size: Font.Size, from scheme: FontScheme = Styled.defaultFontScheme) -> CGFloat {
 		size.resolve(from: scheme)
 	}
-}
-
-extension UIFont.Weight {
 	
-	/// Returns description of current weight if it is known
-	fileprivate var styledDescription: String {
-		switch self {
-		case .ultraLight: return "ultraLight"
-		case .thin: return "thin"
-		case .light: return "light"
-		case .regular: return "regular"
-		case .medium: return "medium"
-		case .semibold: return "semibold"
-		case .bold: return "bold"
-		case .heavy: return "heavy"
-		case .black: return "black"
-		default: return "(\(self))"
-		}
-	}
-}
-
-extension UIFont.TextStyle {
-	
-	/// Returns description of current weight if it is known
-	fileprivate var styledDescription: String {
-		switch self {
-			case .title1: return "title1"
-			case .title2: return "title2"
-			case .title3: return "title3"
-			case .headline: return "headline"
-			case .subheadline: return "subheadline"
-			case .body: return "body"
-			case .callout: return "callout"
-			case .footnote: return "footnote"
-			case .caption1: return "caption1"
-			case .caption2: return "caption2"
-		default:
-			if #available(iOS 11, *), self == .largeTitle {
-				return "largeTitle"
-			}
-			return "(\(self))"
-		}
+	/// Will return the font with `Size` given
+	/// - Parameter size: `Font.Size` which determiens font is dynamic or static
+	/// - Parameter scheme: `Scheme` to resolve size of Font from
+	open func withSize(_ size: Font.Size, from scheme: FontScheme = Styled.defaultFontScheme) -> UIFont {
+		self.withSize(size.resolve(from: scheme))
 	}
 }
 
@@ -422,31 +366,37 @@ extension StyledWrapper {
 	}
 	
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
-	private func update(_ styledFont: StyledFont?, _ apply: @escaping (Base, UIFont?) -> Void) -> Styled.Update<StyledFont>? {
-		guard let styledFont = styledFont else { return nil }
-		let styledUpdate = Styled.Update(item: styledFont) { [weak base] scheme in
+	private func update(_ font: Font?, _ apply: @escaping (Base, UIFont?) -> Void) -> Styled.Update<Font>? {
+		guard let font = font else { return nil }
+		let styledUpdate = Styled.Update(item: font) { [weak base] scheme in
 			guard let base = base else { return () }
-			return apply(base, styledFont.resolve(from: scheme))
+			return apply(base, font.resolve(from: scheme))
 		}
 		styledUpdate.refresh(styled.fontScheme)
 		return styledUpdate
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `StyledFont`.
+	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont>) -> StyledFont? {
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont>) -> Font? {
 		get { styled.fontUpdates[keyPath]?.item }
 		set { styled.fontUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `StyledFont`.
+	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont?>) -> StyledFont? {
+	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont?>) -> Font? {
 		get { styled.fontUpdates[keyPath]?.item }
 		set { styled.fontUpdates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 }
+
+// MARK:- Typealises
+/// Used to fix namespace conflicts
+public typealias StyledFont = Font
+/// Used to fix namespaec conflicts
+public typealias StyledFontScheme = FontScheme
