@@ -8,6 +8,11 @@
 import Foundation
 import class UIKit.UIFont
 
+/// Used to escape fix namespace conflicts
+public typealias StyledFont = Font
+/// Used to escape fix namespace conflicts
+public typealias StyledFontScheme = FontScheme
+
 // MARK:- Font
 /// Used to fetch font on runtime based on current `FontScheme`
 ///
@@ -302,6 +307,8 @@ public protocol FontScheme {
 /// Will fetch `Font`s from system font size category
 public struct DefaultFontScheme: FontScheme {
 	
+	public init() { }
+	
 	public func font(for font: Font) -> UIFont? {
 		.systemFont(ofSize: size(for: font.size!), weight: font.weight!)
 	}
@@ -348,7 +355,7 @@ extension StyledWrapper {
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
-	public func onFontSchemeChange(withId id: Styled.ClosureId = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
+	public func onFontSchemeChange(withId id: ClosureIdentifier = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
 		guard let update = update else { return styled.colorUpdates[id] = nil }
 		styled.colorUpdates[id] = { [weak base] in
 			guard let base = base else { return }
@@ -386,9 +393,3 @@ extension StyledWrapper {
 		set { styled.fontUpdates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 }
-
-// MARK:- Typealises
-/// Used to fix namespace conflicts
-public typealias StyledFont = Font
-/// Used to fix namespaec conflicts
-public typealias StyledFontScheme = FontScheme

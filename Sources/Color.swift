@@ -8,6 +8,11 @@
 import Foundation
 import class UIKit.UIColor
 
+/// Used to escape fix namespace conflicts
+public typealias StyledColor = Color
+/// Used to escape fix namespace conflicts
+public typealias StyledColorScheme = ColorScheme
+
 // MARK:- Color
 /// Used to fetch color on runtime based on current `ColorScheme`
 ///
@@ -347,9 +352,9 @@ public protocol ColorScheme {
 @available(iOS 11, *)
 public struct DefaultColorScheme: ColorScheme {
 	
-	public func color(for color: Color) -> UIColor? { .named(color.description, in: nil) }
-	
 	public init() { }
+	
+	public func color(for color: Color) -> UIColor? { .named(color.description, in: nil) }
 }
 
 extension Color {
@@ -429,7 +434,7 @@ extension StyledWrapper {
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
-	public func onColorSchemeChange(withId id: Styled.ClosureId = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
+	public func onColorSchemeChange(withId id: ClosureIdentifier = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
 		guard let update = update else { return styled.colorUpdates[id] = nil }
 		styled.colorUpdates[id] = { [weak base] in
 			guard let base = base else { return }
@@ -455,7 +460,7 @@ extension StyledWrapper {
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> Color? {
 		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
+		set { styled.colorUpdates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -473,7 +478,7 @@ extension StyledWrapper {
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> Color? {
 		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.cgColor : () } }
+		set { styled.colorUpdates[keyPath] = update(newValue) { ($1?.cgColor).write(to: keyPath, on: $0) } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -491,7 +496,7 @@ extension StyledWrapper {
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> Color? {
 		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1!.ciColor : () } }
+		set { styled.colorUpdates[keyPath] = update(newValue) { ($1?.ciColor).write(to: keyPath, on: $0) } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -503,9 +508,3 @@ extension StyledWrapper {
 		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
 }
-
-// MARK:- Typealises
-/// Used to fix namespace conflicts
-public typealias StyledColor = Color
-/// Used to fix namespaec conflicts
-public typealias StyledColorScheme = ColorScheme

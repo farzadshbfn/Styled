@@ -8,6 +8,11 @@
 import Foundation
 import class UIKit.UIImage
 
+/// Used to escape fix namespace conflicts
+public typealias StyledImage = Image
+/// Used to escape fix namespace conflicts
+public typealias StyledImageScheme = ImageScheme
+
 // MARK:- Image
 /// Used to fetch Image on runtime based on current `ImageScheme`
 ///
@@ -282,9 +287,9 @@ public protocol ImageScheme {
 /// - SeeAlso: `Image(_:,bundle:)`
 public struct DefaultImageScheme: ImageScheme {
 	
-	public func image(for image: Image) -> UIImage? { .named(image.description, in: nil) }
-	
 	public init() { }
+	
+	public func image(for image: Image) -> UIImage? { .named(image.description, in: nil) }
 }
 
 extension Image {
@@ -332,7 +337,7 @@ extension StyledWrapper {
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
-	public func onImageSchemeChange(withId id: Styled.ClosureId = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
+	public func onImageSchemeChange(withId id: ClosureIdentifier = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
 		guard let update = update else { return styled.colorUpdates[id] = nil }
 		styled.colorUpdates[id] = { [weak base] in
 			guard let base = base else { return }
@@ -358,7 +363,7 @@ extension StyledWrapper {
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage>) -> Image? {
 		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
+		set { styled.imageUpdates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -376,12 +381,7 @@ extension StyledWrapper {
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage>) -> Image? {
 		get { styled.imageUpdates[keyPath]?.item }
-		set {
-			styled.imageUpdates[keyPath] = update(newValue) { base, image in
-				guard let cgImage = image?.cgImage else { return () }
-				base[keyPath: keyPath] = cgImage
-			}
-		}
+		set { styled.imageUpdates[keyPath] = update(newValue) { ($1?.cgImage).write(to: keyPath, on: $0) } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -399,12 +399,7 @@ extension StyledWrapper {
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage>) -> Image? {
 		get { styled.imageUpdates[keyPath]?.item }
-		set {
-			styled.imageUpdates[keyPath] = update(newValue) { base, image in
-				guard let ciImage = image?.ciImage else { return () }
-				base[keyPath: keyPath] = ciImage
-			}
-		}
+		set { styled.imageUpdates[keyPath] = update(newValue) { ($1?.ciImage).write(to: keyPath, on: $0) } }
 	}
 	
 	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -416,10 +411,3 @@ extension StyledWrapper {
 		set { styled.imageUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciImage } }
 	}
 }
-
-// MARK:- Typealises
-/// Used to fix namespace conflicts
-public typealias StyledImage = Image
-/// Used to fix namespaec conflicts
-public typealias StyledImageScheme = ImageScheme
-

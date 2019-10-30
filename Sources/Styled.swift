@@ -8,6 +8,9 @@
 import Foundation
 import UIKit
 
+/// Used to Identify update closures used in `onColorSchemeChange(_), onImageSchemeChange(), onFontSchemeChange()`
+public typealias ClosureIdentifier = String
+
 // MARK:- Styled
 public final class Styled {
 	
@@ -211,8 +214,6 @@ private var associatedStyledHolder: Int8 = 0
 
 // MARK:- StyledUpdate
 extension Styled {
-	/// Used to Identify update closures used in `onColorSchemeChange(_), onImageSchemeChange(), onFontSchemeChange()`
-	public typealias ClosureId = String
 	
 	/// Contains list of `StyledItem`s (i.e `Color`, `Font`, `Image`, ...) and a `closures` to act upon `Item.Scheme` change
 	struct Updates<Item> where Item: StyledItem {
@@ -221,7 +222,7 @@ extension Styled {
 		var keyPaths: [AnyKeyPath: Update<Item>] = [:]
 		
 		/// Holds `Id` of closures passed to `Styled` to get called when `Item.Scheme` changes
-		var closures: [ClosureId: () -> ()] = [:]
+		var closures: [ClosureIdentifier: () -> ()] = [:]
 		
 		/// Will call all `Update`.`update`s and Closures
 		/// - Parameter scheme: Suitable `Item.Scheme`
@@ -239,7 +240,7 @@ extension Styled {
 		}
 		
 		/// Will query through `closures`
-		subscript(_ id: ClosureId) -> (() -> Void)? {
+		subscript(_ id: ClosureIdentifier) -> (() -> Void)? {
 			get { closures[id] }
 			set { closures[id] = newValue }
 		}
@@ -272,29 +273,8 @@ extension StyledCompatible {
 
 extension NSObject: StyledCompatible { }
 
-// MARK:- Helper
-
 /// Used to encapsulate all `Styled` types
 protocol StyledItem { associatedtype Scheme }
 extension Color: StyledItem { typealias Scheme = ColorScheme }
 extension Image: StyledItem { typealias Scheme = ImageScheme }
 extension Font: StyledItem { typealias Scheme = FontScheme }
-
-private extension Optional {
-	
-	/// Mutates self to the given value if and only if `self` is `nil`
-	/// - Parameter value: WrappedType
-	mutating func coalesce(with value: @autoclosure () -> Wrapped) {
-		switch self {
-		case .none: self = .some(value())
-		default: break
-		}
-	}
-	
-	/// Will call the closure if `self` is not `nil`
-	/// - Parameter action: (`Wrapped`) -> ()
-	func `do`(_ action: (Wrapped) -> ()) {
-		guard let value = self else { return }
-		action(value)
-	}
-}

@@ -7,7 +7,10 @@
 
 import Foundation
 
+/// Used to escape namespace conflicts
+public typealias StyledConfig = Config
 
+/// Contains Configurations for `Styled` to operate
 public final class Config {
 	static let shared = Config()
 	
@@ -59,7 +62,3 @@ public final class Config {
 		didSet { NotificationCenter.default.post(name: fontSchemeDidChange, object: nil) }
 	}
 }
-
-// MARK:- Typealises
-/// Used to fix namespace conflicts
-public typealias StyledConfig = Config
