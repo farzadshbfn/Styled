@@ -164,10 +164,4 @@ class ColorTests: XCTestCase {
 			expect(UIColor.styled(color)) == .blue
 		}
 	}
-	
-	func testTypealises() {
-		expect(StyledColor.self == Color.self) == true
-		expect(StyledColorScheme.self == ColorScheme.self) == true
-		expect(StyledColorScheme.self == StyledColor.self) == false
-	}
 }

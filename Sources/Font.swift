@@ -8,11 +8,6 @@
 import Foundation
 import class UIKit.UIFont
 
-/// Used to escape fix namespace conflicts
-public typealias StyledFont = Font
-/// Used to escape fix namespace conflicts
-public typealias StyledFontScheme = FontScheme
-
 // MARK:- Font
 /// Used to fetch font on runtime based on current `FontScheme`
 ///
@@ -112,7 +107,14 @@ public struct Font: Hashable, CustomStringConvertible {
 }
 
 
-extension Font {
+extension Font: Item {
+	
+	typealias Scheme = FontScheme
+	
+	typealias Result = UIFont
+	
+	/// This type is used to support transformations on `Font` like `.transform`
+	typealias Lazy = Styled.Lazy<Font>
 	
 	/// Identifies wether the font needs to be static or dynamically managed by fontSizeCategory of system
 	public enum Size: Hashable, CustomStringConvertible {
@@ -134,12 +136,6 @@ extension Font {
 			case .dynamic(let style): return "\(style.rawValue)"
 			}
 		}
-		
-		/// This method is used internally to manage transformations (if any) and provide `CGFloat` as size of `UIFont`
-		/// - Parameter scheme:A `FontScheme` to fetch `CGFloat` from
-		func resolve(from scheme: FontScheme) -> CGFloat {
-			scheme.size(for: self)
-		}
 	}
 	
 	/// Internal type to manage Lazy or direct fetching of `UIFont`
@@ -159,55 +155,12 @@ extension Font {
 		}
 	}
 	
-	struct Lazy: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `Font` in order to let `Font` hold `Lazy` in its definition
-		let fontHashValue: Int
-		
-		/// Describes current font that will be returned
-		let fontDescription: String
-		
-		/// Describes current font that will be returned
-		var description: String { fontDescription }
-		
-		/// Provides `UIFont` which can be backed by `Font`
-		let font: (_ scheme: FontScheme) -> UIFont?
-		
-		/// Used internally to pre-calculate hashValue of Internal `font`
-		private static func hashed<H: Hashable>(_ category: String, _ value: H) -> Int {
-			var hasher = Hasher()
-			hasher.combine(category)
-			value.hash(into: &hasher)
-			return hasher.finalize()
-		}
-		
-		/// Will load `UIFont` from `Font` when needed
-		init(_ font: Font) {
-			fontHashValue = Self.hashed("Font", font)
-			fontDescription = font.description
-			self.font = font.resolve
-		}
-		
-		/// Will use custom Provider to provide `UIFont` when needed
-		/// - Parameter name: Will be used as `description` and inside hash-algorithms
-		init(name: String, _ fontProvider: @escaping (_ scheme: FontScheme) -> UIFont?) {
-			fontHashValue = Self.hashed("FontProvider", name)
-			fontDescription = name
-			font = fontProvider
-		}
-		
-		/// - Returns: `hashValue` of given parameters when initializing `Lazy`
-		func hash(into hasher: inout Hasher) { hasher.combine(fontHashValue) }
-		
-		/// Is backed by `hashValue` comparision
-		static func == (lhs: Lazy, rhs: Lazy) -> Bool { lhs.hashValue == rhs.hashValue }
-	}
-	
 	/// This method is used internally to manage transformations (if any) and provide `UIFont`
 	/// - Parameter scheme:A `FontScheme` to fetch `UIFont` from
 	func resolve(from scheme: FontScheme) -> UIFont? {
 		switch resolver {
 		case .font: return scheme.font(for: self)
-		case .lazy(let lazy): return lazy.font(scheme)
+		case .lazy(let lazy): return lazy.item(scheme)
 		}
 	}
 	
@@ -249,14 +202,6 @@ extension Font {
 /// 	        default: // return Customized latino font with given font.size! and font.weight!
 /// 	        }
 /// 	    }
-///
-/// 	    func size(for size: Font.Font.Size) -> CGFloat {
-/// 	    	switch size {
-/// 	    	case .static(let size): return size
-/// 	    	// In dynamic case we need to adjust system font for latino fonts
-/// 	    	case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize - 3
-/// 	    	}
-/// 	    }
 /// 	}
 ///
 public protocol FontScheme {
@@ -283,25 +228,6 @@ public protocol FontScheme {
 	///
 	/// - Parameter font: `Font` type to fetch `UIFont` from current scheme
 	func font(for font: Font) -> UIFont?
-	
-	/// `Styled` will use this method to fetch suitable `pointSize` for `UIFont`
-	///
-	/// - Important: **Do not** call this method directly. use `UIFont.preferredFontSize(_:)` instead
-	///
-	/// Sample for `LatinoFontScheme`:
-	///
-	/// 	struct LatinoFontScheme: FontScheme {
-	/// 	    func size(for size: Font.Font.Size) -> CGFloat {
-	/// 	    	switch size {
-	/// 	    	case .static(let size): return size
-	/// 	    	// In dynamic case we need to adjust system font for latino fonts
-	/// 	    	case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize - 3
-	/// 	    	}
-	/// 	    }
-	/// 	}
-	///
-	/// - Parameter size: `Font.Font.Size`
-	func size(for size: Font.Size) -> CGFloat
 }
 
 /// Will fetch `Font`s from system font size category
@@ -330,66 +256,5 @@ extension UIFont {
 	/// - Parameter scheme: `FontScheme` to search for font. (default: `Config.fontScheme`)
 	open class func styled(_ font: Font, from scheme: FontScheme = Config.fontScheme) -> UIFont? {
 		font.resolve(from: scheme)
-	}
-	
-	/// Will fetch suitable `pointSize` for given `Font.Font.Size` defined in given `FontScheme`
-	///
-	/// - Parameter size: `Font.Font.Size`
-	/// - Parameter scheme: `FontScheme` to search for suitable pointSize. (default: `Config.fontScheme`)
-	open class func preferedFontSize(for size: Font.Size, from scheme: FontScheme = Config.fontScheme) -> CGFloat {
-		size.resolve(from: scheme)
-	}
-	
-	/// Will return the font with `Size` given
-	/// - Parameter size: `Font.Size` which determiens font is dynamic or static
-	/// - Parameter scheme: `Scheme` to resolve size of Font from. (default: `Config.fontScheme`)
-	open func withSize(_ size: Font.Size, from scheme: FontScheme = Config.fontScheme) -> UIFont {
-		self.withSize(size.resolve(from: scheme))
-	}
-}
-
-// MARK:- StyledWrapper
-extension StyledWrapper {
-	
-	/// Will get called when  `Config.fontSchemeDidChange` is raised or `applyFonts()` is called or `currentFontScheme` changes
-	/// - Parameter id: A unique Identifier to gain controler over closure
-	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
-	/// - Parameter update: Setting `nil` will stop updating for given `id`
-	public func onFontSchemeChange(withId id: ClosureIdentifier = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return styled.colorUpdates[id] = nil }
-		styled.colorUpdates[id] = { [weak base] in
-			guard let base = base else { return }
-			update(base)
-		}
-		if shouldSet { update(base) }
-	}
-	
-	/// Internal `update` method which generates `Styled.Update` and applies the update once.
-	private func update(_ font: Font?, _ apply: @escaping (Base, UIFont?) -> Void) -> Styled.Update<Font>? {
-		guard let font = font else { return nil }
-		let styledUpdate = Styled.Update(item: font) { [weak base] scheme in
-			guard let base = base else { return () }
-			return apply(base, font.resolve(from: scheme))
-		}
-		styledUpdate.refresh(styled.fontScheme)
-		return styledUpdate
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont>) -> Font? {
-		get { styled.fontUpdates[keyPath]?.item }
-		set { styled.fontUpdates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont?>) -> Font? {
-		get { styled.fontUpdates[keyPath]?.item }
-		set { styled.fontUpdates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 }

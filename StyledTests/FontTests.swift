@@ -16,9 +16,4 @@ class FontTests: XCTestCase {
 
     override func tearDown() { }
 	
-	func testTypealises() {
-		expect(StyledFont.self == Font.self) == true
-		expect(StyledFontScheme.self == FontScheme.self) == true
-		expect(StyledFontScheme.self == StyledFont.self) == false
-	}
 }

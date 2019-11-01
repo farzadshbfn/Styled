@@ -8,11 +8,6 @@
 import Foundation
 import class UIKit.UIColor
 
-/// Used to escape fix namespace conflicts
-public typealias StyledColor = Color
-/// Used to escape fix namespace conflicts
-public typealias StyledColorScheme = ColorScheme
-
 // MARK:- Color
 /// Used to fetch color on runtime based on current `ColorScheme`
 ///
@@ -121,13 +116,29 @@ public struct Color: Hashable, CustomStringConvertible ,ExpressibleByStringLiter
 		if isPrefixMatchingEnabled {
 			guard let valueName = value.name, let patternName = pattern.name else { return false }
 			return valueName.hasPrefix(patternName)
-		} else {
-			return value == pattern
 		}
+		return value == pattern
 	}
 }
 
-extension Color {
+extension Lazy where Item == Color {
+	
+	/// Will directly propagate given `UIColor` when needed
+	init(_ uiColor: UIColor) {
+		itemHashValue = Self.hashed("UIColor", uiColor)
+		itemDescription = "(\(uiColor))"
+		item = { _ in uiColor }
+	}
+}
+
+extension Color: Item {
+	
+	typealias Scheme = ColorScheme
+	
+	typealias Result = UIColor
+	
+	/// This type is used to support transformations on `Color` like `.blend`
+	typealias Lazy = Styled.Lazy<Color>
 	
 	/// Internal type to manage Lazy or direct fetching of `UIColor`
 	enum Resolver: Hashable, CustomStringConvertible {
@@ -146,63 +157,12 @@ extension Color {
 		}
 	}
 	
-	/// This type is used to support transformations on `Color` like `.blend`
-	struct Lazy: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `Color` in order to let `Color` hold `Lazy` in its definition
-		let colorHashValue: Int
-		
-		/// Describes current color that will be returned
-		let colorDescription: String
-		
-		/// Describes current color that will be returned
-		var description: String { colorDescription }
-		
-		/// Provides `UIColor` which can be backed by `Color` or static `UIColor`
-		let color: (_ scheme: ColorScheme) -> UIColor?
-		
-		/// Used internally to pre-calculate hashValue of Internal `color`
-		private static func hashed<H: Hashable>(_ category: String, _ value: H) -> Int {
-			var hasher = Hasher()
-			hasher.combine(category)
-			value.hash(into: &hasher)
-			return hasher.finalize()
-		}
-		
-		/// Will load `UIColor` from `Color` when needed
-		init(_ color: Color) {
-			colorHashValue = Self.hashed("Color", color)
-			colorDescription = color.description
-			self.color = color.resolve
-		}
-		
-		/// Will directly propagate given `UIColor` when needed
-		init(_ uiColor: UIColor) {
-			colorHashValue = Self.hashed("UIColor", uiColor)
-			colorDescription = "(\(uiColor))"
-			color = { _ in uiColor }
-		}
-		
-		/// Will use custom Provider to provide `UIColor` when needed
-		/// - Parameter name: Will be used as `description` and inside hash-algorithms
-		init(name: String, _ colorProvider: @escaping (_ scheme: ColorScheme) -> UIColor?) {
-			colorHashValue = Self.hashed("ColorProvider", name)
-			colorDescription = name
-			color = colorProvider
-		}
-		
-		/// - Returns: `hashValue` of given parameters when initializing `Lazy`
-		func hash(into hasher: inout Hasher) { hasher.combine(colorHashValue) }
-		
-		/// Is backed by `hashValue` comparision
-		static func == (lhs: Lazy, rhs: Lazy) -> Bool { lhs.hashValue == rhs.hashValue }
-	}
-	
 	/// This method is used internally to manage transformations (if any) and provide `UIColor`
 	/// - Parameter scheme:A `ColorScheme` to fetch `UIColor` from
 	func resolve(from scheme: ColorScheme) -> UIColor? {
 		switch resolver {
 		case .name: return scheme.color(for: self)
-		case .lazy(let lazy): return lazy.color(scheme)
+		case .lazy(let lazy): return lazy.item(scheme)
 		}
 	}
 	
@@ -221,8 +181,8 @@ extension Color {
 		let fromDesc = "\(self)*\(String(format: "%.2f", perc))"
 		let toDesc = "\(to)*\(String(format: "%.2f", 1 - perc))"
 		return .init(lazy: .init(name: "\(fromDesc)+\(toDesc)") { scheme in
-			guard let fromUIColor = self.resolve(from: scheme) else { return to.color(scheme) }
-			guard let toUIColor = to.color(scheme) else { return fromUIColor }
+			guard let fromUIColor = self.resolve(from: scheme) else { return to.item(scheme) }
+			guard let toUIColor = to.item(scheme) else { return fromUIColor }
 			return fromUIColor.blend(CGFloat(perc), with: toUIColor)
 			})
 	}
@@ -424,87 +384,5 @@ extension UIColor {
 			name = name.split(separator: ".").dropLast().joined(separator: ".")
 		}
 		return nil
-	}
-}
-
-// MARK:- StyledWrapper
-extension StyledWrapper {
-	
-	/// Will get called when  `Config.colorSchemeDidChange` is raised or `applyColors()` is called or `currentColorScheme` changes
-	/// - Parameter id: A unique Identifier to gain controler over closure
-	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
-	/// - Parameter update: Setting `nil` will stop updating for given `id`
-	public func onColorSchemeChange(withId id: ClosureIdentifier = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return styled.colorUpdates[id] = nil }
-		styled.colorUpdates[id] = { [weak base] in
-			guard let base = base else { return }
-			update(base)
-		}
-		if shouldSet { update(base) }
-	}
-	
-	/// Internal `update` method which generates `Styled.Update` and applies the update once.
-	private func update(_ color: Color?, _ apply: @escaping (Base, UIColor?) -> Void) -> Styled.Update<Color>? {
-		guard let color = color else { return nil }
-		let styledUpdate = Styled.Update(item: color) { [weak base] scheme in
-			guard let base = base else { return () }
-			return apply(base, color.resolve(from: scheme))
-		}
-		styledUpdate.refresh(styled.colorScheme)
-		return styledUpdate
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> Color? {
-		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> Color? {
-		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> Color? {
-		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { ($1?.cgColor).write(to: keyPath, on: $0) } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor?>) -> Color? {
-		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> Color? {
-		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { ($1?.ciColor).write(to: keyPath, on: $0) } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor?>) -> Color? {
-		get { styled.colorUpdates[keyPath]?.item }
-		set { styled.colorUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
 }

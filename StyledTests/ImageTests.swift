@@ -158,10 +158,4 @@ class ImageTests: XCTestCase {
 		
 		expect(UIImage.styled(image)) == UIImage(named: "sampleModule.profile.multi.fill", in: Bundle(identifier: "com.farzadshbfn.SampleModule"), with: nil)
 	}
-	
-	func testTypealises() {
-		expect(StyledImage.self == Image.self) == true
-		expect(StyledImageScheme.self == ImageScheme.self) == true
-		expect(StyledImageScheme.self == StyledImage.self) == false
-	}
 }

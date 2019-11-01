@@ -8,11 +8,6 @@
 import Foundation
 import class UIKit.UIImage
 
-/// Used to escape fix namespace conflicts
-public typealias StyledImage = Image
-/// Used to escape fix namespace conflicts
-public typealias StyledImageScheme = ImageScheme
-
 // MARK:- Image
 /// Used to fetch Image on runtime based on current `ImageScheme`
 ///
@@ -115,13 +110,19 @@ public struct Image: Hashable, CustomStringConvertible ,ExpressibleByStringLiter
 		if isPrefixMatchingEnabled {
 			guard let valueName = value.name, let patternName = pattern.name else { return false }
 			return valueName.hasPrefix(patternName)
-		} else {
-			return value == pattern
 		}
+		return value == pattern
 	}
 }
 
-extension Image {
+extension Image: Item {
+	
+	typealias Scheme = ImageScheme
+	
+	typealias Result = UIImage
+	
+	/// This type is used to support transformations on `Image` like `.transform`
+	typealias Lazy = Styled.Lazy<Image>
 	
 	/// Internal type to manage Lazy or direct fetching of `UIImage`
 	enum Resolver: Hashable, CustomStringConvertible {
@@ -140,56 +141,12 @@ extension Image {
 		}
 	}
 	
-	/// This type is used to support transformations on `Image` like `renderMode`
-	struct Lazy: Hashable, CustomStringConvertible {
-		/// Is generated on `init`, to keep the type Hashable and hide `Image` in order to let `Image` hold `Lazy` in its definition
-		let imageHashValue: Int
-		
-		/// Describes current image that will be returned
-		let imageDescription: String
-		
-		/// Describes current image that will be returned
-		var description: String { imageDescription }
-		
-		/// Provides `UIImage` which can be backed by `Image` or static `UIImage`
-		let image: (_ scheme: ImageScheme) -> UIImage?
-		
-		/// Used internally to pre-calculate hashValue of Internal `Image`
-		private static func hashed<H: Hashable>(_ category: String, _ value: H) -> Int {
-			var hasher = Hasher()
-			hasher.combine(category)
-			value.hash(into: &hasher)
-			return hasher.finalize()
-		}
-		
-		/// Will load `UIImage` from `Image` when needed
-		init(_ image: Image) {
-			imageHashValue = Self.hashed("Image", image)
-			imageDescription = image.description
-			self.image = image.resolve
-		}
-		
-		/// Will use custom Provider to provide `UIImage` when needed
-		/// - Parameter name: Will be used as `description` and inside hash-algorithms
-		init(name: String, _ imageProvider: @escaping (_ scheme: ImageScheme) -> UIImage?) {
-			imageHashValue = Self.hashed("ImageProvider", name)
-			imageDescription = name
-			image = imageProvider
-		}
-		
-		/// - Returns: `hashValue` of given parameters when initializing `Lazy`
-		func hash(into hasher: inout Hasher) { hasher.combine(imageHashValue) }
-		
-		/// Is backed by `hashValue` comparision
-		static func == (lhs: Lazy, rhs: Lazy) -> Bool { lhs.hashValue == rhs.hashValue }
-	}
-	
 	/// This method is used internally to manage transformations (if any) and provide `UIImage`
 	/// - Parameter scheme:A `ImageScheme` to fetch `UIImage` from
 	func resolve(from scheme: ImageScheme) -> UIImage? {
 		switch resolver {
 		case .name: return scheme.image(for: self)
-		case .lazy(let lazy): return lazy.image(scheme)
+		case .lazy(let lazy): return lazy.item(scheme)
 		}
 	}
 	
@@ -327,87 +284,5 @@ extension UIImage {
 	/// - Parameter scheme: `ImageScheme` to search for image. (default: `Config.imageScheme`)
 	open class func styled(_ image: Image, from scheme: ImageScheme = Config.imageScheme) -> UIImage? {
 		image.resolve(from: scheme)
-	}
-}
-
-// MARK:- StyledWrapper
-extension StyledWrapper {
-	
-	/// Will get called when  `Config.imageSchemeDidChange` is raised or `applyImages()` is called or `currentImageScheme` changes
-	/// - Parameter id: A unique Identifier to gain controler over closure
-	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
-	/// - Parameter update: Setting `nil` will stop updating for given `id`
-	public func onImageSchemeChange(withId id: ClosureIdentifier = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return styled.colorUpdates[id] = nil }
-		styled.colorUpdates[id] = { [weak base] in
-			guard let base = base else { return }
-			update(base)
-		}
-		if shouldSet { update(base) }
-	}
-	
-	/// Internal `update` method which generates `Styled.Update` and applies the update once.
-	private func update(_ image: Image?, _ apply: @escaping (Base, UIImage?) -> Void) -> Styled.Update<Image>? {
-		guard let image = image else { return nil }
-		let styledUpdate = Styled.Update(item: image) { [weak base] scheme in
-			guard let base = base else { return () }
-			return apply(base, image.resolve(from: scheme))
-		}
-		styledUpdate.refresh(styled.imageScheme)
-		return styledUpdate
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage>) -> Image? {
-		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage?>) -> Image? {
-		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage>) -> Image? {
-		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { ($1?.cgImage).write(to: keyPath, on: $0) } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage?>) -> Image? {
-		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage>) -> Image? {
-		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { ($1?.ciImage).write(to: keyPath, on: $0) } }
-	}
-	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
-	///
-	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
-	///
-	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage?>) -> Image? {
-		get { styled.imageUpdates[keyPath]?.item }
-		set { styled.imageUpdates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciImage } }
 	}
 }
