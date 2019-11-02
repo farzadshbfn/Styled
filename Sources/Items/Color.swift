@@ -46,7 +46,7 @@ import class UIKit.UIColor
 ///  	}
 ///
 /// - SeeAlso: `~=` method in this file
-public struct Color: Hashable, CustomStringConvertible ,ExpressibleByStringLiteral {
+public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiteral {
 	/// A type that represents a `Color` name
 	public typealias StringLiteralType = String
 	
@@ -77,7 +77,6 @@ public struct Color: Hashable, CustomStringConvertible ,ExpressibleByStringLiter
 	
 	/// Describes specification of `UIColor` that will be *fetched*/*generated*
 	///
-	///  - Note: `Color`s with transformations will not be sent to `ColorScheme`s directly
 	///  - Note: If description contains `{...}` it means this `Color` contains transformations
 	///
 	///  Samples:

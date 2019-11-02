@@ -45,7 +45,8 @@ import class UIKit.UIImage
 ///  	}
 ///
 /// - SeeAlso: `~=` method in this file
-public struct Image: Hashable, CustomStringConvertible ,ExpressibleByStringLiteral {
+public struct Image: Hashable, CustomStringConvertible, ExpressibleByStringLiteral {
+	
 	/// A type that represents a `Image` name
 	public typealias StringLiteralType = String
 	
