@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'FarzadShbfn' => 'farzad.shbfn@gmail.com' }
   s.source           = { :git => 'https://github.com/farzadshbfn/Styled.git', :tag => s.version.to_s }
-  s.source_files 	 = 'Sources/*.{swift}'
+  s.source_files 	 = 'Sources/**/*.{swift}'
   s.platforms        = { :ios => '10.0' }
   s.ios.deployment_target = '10.0'
   s.swift_version = '5.0'

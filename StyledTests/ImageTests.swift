@@ -68,6 +68,8 @@ class ImageTests: XCTestCase {
 		expect(.profileFill ~= .profileFill) == true
 		expect(.profileMulti ~= .profileMulti) == true
 		
+		expect(Image.profile ~= Image.profile.renderingMode(.alwaysTemplate)) == false
+		
 		switch Image.profileMulti {
 		case .profile: break
 		default: fail("profile case should be matched")

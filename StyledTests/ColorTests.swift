@@ -66,6 +66,8 @@ class ColorTests: XCTestCase {
 		expect(.primary1 ~= .primary1) == true
 		expect(.primary2 ~= .primary2) == true
 		
+		expect(Color.primary ~= Color.primary.blend(with: .primary2)) == false
+		
 		switch Color.primary2 {
 		case .primary: break
 		default: fail("primary case should be matched")
