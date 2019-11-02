@@ -20,19 +20,19 @@ import class UIKit.UIImage
 /// Sample usage:
 ///
 /// 	extension Image {
-/// 	    static let profile      = Self("profile")
-/// 	    static let profileFill  = Self("profile.fill")
-/// 	    static let profileMulti = Self("profile.multi")
+/// 	    static let profile:      Self = "profile"
+/// 	    static let profileFill:  Self = "profile.fill"
+/// 	    static let profileMulti: Self = "profile.multi"
 /// 	}
 ///
-/// 	imageView.styled.image = .profile
-/// 	imageView.styled.image = .renderingMode(.alwaysTemplate, of: .profile)
+/// 	imageView.sd.image = .profile
+/// 	imageView.sd.image = .renderingMode(.alwaysTemplate, of: .profile)
 ///
 /// `Image` uses custom pattern-matchin.  in the example given, `profileMulti` would match
 /// with `profile` if it is checked before `profileMulti`:
 ///
 ///  	switch Image.profileMulti {
-///  	case .profile: // Will match ✅sa
+///  	case .profile: // Will match ✅
 ///  	case .profileMulti: // Will not match ❌
 ///  	}
 ///
@@ -154,7 +154,6 @@ extension Image: Item {
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
-	
 	/// Will return the backed `Image` with given `renderingMode`
 	///
 	/// - Parameter renderingMode: `UIImage.RenderingMode`
@@ -172,26 +171,6 @@ extension Image: Item {
 	public static func renderingMode(_ renderingMode: UIImage.RenderingMode,
 									 of image: Image) -> Image {
 		image.renderingMode(renderingMode)
-	}
-	
-	/// Applies custom transformations on the `UIImage`
-	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
-	/// - Parameter transform: Apply transformation before providing the `UIImage`
-	public func transform(named name: String = "t", _ transform: @escaping (UIImage) -> UIImage) -> Image {
-		return .init(lazy: .init(name: "\(self)->\(name)", { scheme in
-			guard let image = self.resolve(from: scheme) else { return nil }
-			return transform(image)
-		}))
-	}
-	
-	/// Applies custom transformations on the `UIImage` fetched from `Image`
-	/// - Parameter image: `Image` to fetch
-	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
-	/// - Parameter transform: Apply transformation before providing the `UIImage`
-	public static func transforming(_ image: Image,
-									named name: String = "t",
-									_ transform: @escaping (UIImage) -> UIImage) -> Image {
-		image.transform(named: name, transform)
 	}
 }
 
@@ -212,7 +191,7 @@ extension Image: Item {
 ///
 public protocol ImageScheme {
 	
-	/// `Styled` will use this method to fetch `UIImage`
+	/// `StyleDescriptor` will use this method to fetch `UIImage`
 	///
 	/// - Important: **Do not** call this method directly. use `UIImage.styled(_:)` instead.
 	///
@@ -250,6 +229,7 @@ public struct DefaultImageScheme: ImageScheme {
 }
 
 extension Image {
+	
 	/// Fetches `UIImage` from ImageAsset defined in given `Bundle`
 	///
 	/// - Note: `Image`s initialized with this initializer, will not be sent **directly** to `ImageScheme`. In `ImageScheme`

@@ -20,14 +20,14 @@ import class UIKit.UIColor
 /// Sample usage:
 ///
 /// 	extension Color {
-/// 	    static let primary  = Self("primary")
-/// 	    static let primary1 = Self("primary.lvl1")
-/// 	    static let primary2 = Self("primary.lvl2")
+/// 	    static let primary:  Self = "primary"
+/// 	    static let primary1: Self = "primary.lvl1"
+/// 	    static let primary2: Self = "primary.lvl2"
 /// 	}
 ///
-/// 	view.styled.backgroundColor = .primary
-/// 	label.styled.textColor = .opacity(0.9, of: .primary)
-/// 	layer.styled.backgroundColor = .primary
+/// 	view.sd.backgroundColor = .primary
+/// 	label.sd.textColor = .opacity(0.9, of: .primary)
+/// 	layer.sd.backgroundColor = .primary
 ///
 /// `Color` uses custom pattern-matchin.  in the example given, `primary2` would match
 /// with `primary` if it is checked before `primary2`:
@@ -187,12 +187,12 @@ extension Color: Item {
 			})
 	}
 	
-	/// Blends `self` to the other `StyeledColor` given
+	/// Blends `self` to the other `Color` given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
 	///
 	/// - Parameter perc: Amount to pour from `self`. will be clamped to `[`**0.0**, **1.0**`]`
-	/// - Parameter to: Targeted `StyeledColor`
+	/// - Parameter to: Targeted `Color`
 	/// - Returns: `from * perc + to * (1 - perc)`
 	public func blend(_ perc: Double = 0.5, with to: Color) -> Color { blend(perc, .init(to)) }
 	
@@ -211,7 +211,7 @@ extension Color: Item {
 	///
 	/// - Parameter from: `Color` to pour from
 	/// - Parameter perc: Amount to pour from `self`. will be clamped to `[`**0.0**, **1.0**`]`
-	/// - Parameter to: Targeted `StyeledColor`
+	/// - Parameter to: Targeted `Color`
 	/// - Returns: `from * perc + to * (1 - perc)`
 	public static func blending(_ from: Color, _ perc: Double = 0.5, with to: Color) -> Color { from.blend(perc, with: to) }
 	
@@ -239,26 +239,6 @@ extension Color: Item {
 	/// - Parameter color: `Color`
 	/// - Returns: new instance of `color` with given `opacity`
 	public static func opacity(_ perc: Double, of color: Color) -> Color { color.opacity(perc) }
-	
-	/// Applies custom transformations on the `UIColor`
-	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
-	/// - Parameter transform: Apply transformation before providing the `UIColor`
-	public func transform(named name: String = "t", _ transform: @escaping (UIColor) -> UIColor) -> Color {
-		return .init(lazy: .init(name: "\(self)->\(name)", { scheme in
-			guard let color = self.resolve(from: scheme) else { return nil }
-			return transform(color)
-		}))
-	}
-	
-	/// Applies custom transformations on the `UIColor` fetched from `Color`
-	/// - Parameter color: `Color` to fetch
-	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
-	/// - Parameter transform: Apply transformation before providing the `UIColor`
-	public static func transforming(_ color: Color,
-									named name: String = "t",
-									_ transform: @escaping (UIColor) -> UIColor) -> Color {
-		color.transform(named: name, transform)
-	}
 }
 
 // MARK:- ColorScheme
@@ -278,7 +258,7 @@ extension Color: Item {
 ///
 public protocol ColorScheme {
 	
-	/// `Styled` will use this method to fetch `UIColor`
+	/// `StyleDescriptor` will use this method to fetch `UIColor`
 	///
 	/// - Important: **Do not** call this method directly. use `UIColor.styled(_:)` instead.
 	///
@@ -318,6 +298,7 @@ public struct DefaultColorScheme: ColorScheme {
 }
 
 extension Color {
+	
 	/// Fetches `UIColor` from ColorAsset defined in given `Bundle`
 	///
 	/// - Note: `Color`s initialized with this initializer, will not be sent **directly** to `ColorScheme`. In `ColorScheme`

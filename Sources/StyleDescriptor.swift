@@ -1,5 +1,5 @@
 //
-//  DynamicStyle.swift
+//  StyleDescriptor.swift
 //  Styled
 //
 //  Created by Farzad Sharbafian on 11/2/19.
@@ -8,7 +8,7 @@
 import Foundation
 
 /// Contains and `Base` object and allows `UIColor`/`UIFont`/`UIImage` and `String` setting based on `currentScheme`s set in `Styled`
-@dynamicMemberLookup public struct DynamicStyle<Base: AnyObject> {
+@dynamicMemberLookup public struct StyleDescriptor<Base: AnyObject> {
 	
 	/// Base object to extend.
 	public let base: Base
@@ -24,12 +24,12 @@ public protocol StyledCompatible: AnyObject {
 	associatedtype StyledBase: AnyObject
 	
 	/// Use this variable to set  `Color`s, `Font`s, `Image`s  and ...
-	var ds: DynamicStyle<StyledBase> { get }
+	var sd: StyleDescriptor<StyledBase> { get }
 }
 
 extension StyledCompatible {
 	
-	public var ds: DynamicStyle<Self> {
+	public var sd: StyleDescriptor<Self> {
 		get { .init(base: self) }
 		set { /* Enables dynamicStyle mutations */ }
 	}

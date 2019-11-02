@@ -19,8 +19,8 @@ import class UIKit.UIFont
 ///  		static let body     = Self(.body)
 ///  	}
 ///
-///  	label.styled.font = .title
-///  	label.styled.font = .init(.body, weight: .ultraLight)
+///  	label.sd.font = .title
+///  	label.sd.font = .init(.body, weight: .ultraLight)
 ///
 public struct Font: Hashable, CustomStringConvertible {
 	
@@ -167,26 +167,6 @@ extension Font: Item {
 	/// Enables `Font` to accept transformations
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
-	
-	/// Applies custom transformations on the `UIFont`
-	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
-	/// - Parameter transform: Apply transformation before providing the `UIFont`
-	public func transform(named name: String = "t", _ transform: @escaping (UIFont) -> UIFont) -> Font {
-		return .init(lazy: .init(name: "\(name)->\(self)", { scheme in
-			guard let font = self.resolve(from: scheme) else { return nil }
-			return transform(font)
-		}))
-	}
-	
-	/// Applies custom transformations on the `UIFont` fetched from `Font`
-	/// - Parameter font: `Font` to fetch
-	/// - Parameter name: This field is used to identify different transforms and enable equality check. **"t"** by default
-	/// - Parameter transform: Apply transformation before providing the `UIFont`
-	public static func transforming(_ font: Font,
-									named name: String = "t",
-									_ transform: @escaping (UIFont) -> UIFont) -> Font {
-		font.transform(named: name, transform)
-	}
 }
 
 // MARK:- FontScheme
@@ -206,7 +186,7 @@ extension Font: Item {
 ///
 public protocol FontScheme {
 	
-	/// `Styled` will use this method to fetch `UIFont`
+	/// `StyleDescriptor` will use this method to fetch `UIFont`
 	///
 	/// - Important: **Do not** call this method directly. use `UIFont.styled(_:)` instead.
 	///

@@ -1,5 +1,5 @@
 //
-//  DynamicStyle+Image.swift
+//  StyleDescriptor+Image.swift
 //  Styled
 //
 //  Created by Farzad Sharbafian on 11/2/19.
@@ -10,7 +10,7 @@ import Foundation
 /// Used as reference for object poisoning
 private var associatedConfig: Int8 = 0
 
-extension DynamicStyle {
+extension StyleDescriptor {
 	
 	/// Custom `ImageScheme` used for current Object.
 	///
