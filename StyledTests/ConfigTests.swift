@@ -15,9 +15,4 @@ class StyledConfigTests: XCTestCase {
     override func setUp() { }
 
     override func tearDown() { }
-	
-	func testTypealises() {
-		expect(StyledConfig.self == Config.self) == true
-		expect(StyledConfig.self == Color.self) == false
-	}
 }
