@@ -7,9 +7,6 @@
 
 import Foundation
 
-/// Used to escape namespace conflicts
-public typealias StyledConfig = Config
-
 /// Contains Configurations for `Styled` to operate
 public final class Config {
 	static let shared = Config()
