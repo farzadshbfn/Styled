@@ -11,8 +11,7 @@ import Foundation
 public final class Config {
 	static let shared = Config()
 	
-	init() {
-	}
+	init() { }
 	
 	/// Returns `UIColor.StyledAssetCatalog` for iOS11 and later.
 	static let initialColorScheme: ColorScheme? = {

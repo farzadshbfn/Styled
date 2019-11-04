@@ -11,14 +11,14 @@ import class UIKit.UIButton
 extension StyleDescriptor where Base: UIButton {
 	
 	/// Wrapper for `setImage(_:for:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	func setImage(_ image: Image?, for state: UIControl.State) {
 		onImageSchemeUpdate(withId: #function, do: image.map { img in { $0.setImage(.styled(img), for: state) } } )
 	}
 	
 	/// Wrapper for `setBackgroundImage(_:for:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	func setBackgroundImage(_ image: Image?, for state: UIControl.State) {
 		onImageSchemeUpdate(withId: #function, do: image.map { img in { $0.setBackgroundImage(.styled(img), for: state) } } )
@@ -38,5 +38,15 @@ extension StyleDescriptor where Base: UIButton {
 		onColorSchemeUpdate(withId: #function, do: color.map { clr in { $0.setTitleShadowColor(.styled(clr), for: state) } } )
 	}
 	
-	// TODO: Implement `setTitle`, `setAttributedTitle` when `LocalizedString` is implemented
+	/// Wrapper for `setTitle(_:for:)`
+	/// - Parameter localizedString: `LocalizedString` to synchronize with. Passing `nil` will stop synchronization
+	/// - Parameter state: `UIControl.State`
+	func setTitle(_ localizedString: LocalizedString?, for state: UIControl.State) {
+		onLocalizedStringSchemeUpdate(
+			withId: #function,
+			do: localizedString.map { ls in { $0.setTitle(.styled(ls), for: state) } }
+		)
+	}
+	
+	// TODO: Implement `setAttributedTitle` when `AttributedString` is implemented
 }

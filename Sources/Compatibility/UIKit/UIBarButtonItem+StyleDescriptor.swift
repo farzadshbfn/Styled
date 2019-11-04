@@ -11,7 +11,7 @@ import class UIKit.UIBarButtonItem
 extension StyleDescriptor where Base: UIBarButtonItem {
 	
 	/// Wrapper for `setBackgroundImage(_:for:style:barMetrics:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter style: `UIBarButtonItem.Style`
 	/// - Parameter barMetrics: `UIBarMetrics`
@@ -23,7 +23,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 	}
 	
 	/// Wrapper for `setBackgroundImage(_:for:barMetrics:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter barMetrics: `UIBarMetrics`
 	func setBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {
@@ -34,7 +34,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 	}
 	
 	/// Wrapper for `setBackButtonBackgroundImage(_:for:barMetrics:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter barMetrics: `UIBarMetrics`
 	func setBackButtonBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {

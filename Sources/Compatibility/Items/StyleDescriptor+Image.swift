@@ -38,7 +38,7 @@ extension StyleDescriptor {
 		if shouldSet { update(base) }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
+	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
@@ -47,7 +47,7 @@ extension StyleDescriptor {
 		set { image.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
+	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
@@ -56,7 +56,7 @@ extension StyleDescriptor {
 		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
+	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
@@ -65,7 +65,7 @@ extension StyleDescriptor {
 		set { image.updates[keyPath] = update(newValue) { ($1?.cgImage).write(to: keyPath, on: $0) } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
+	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
@@ -74,7 +74,7 @@ extension StyleDescriptor {
 		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
+	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
@@ -83,7 +83,7 @@ extension StyleDescriptor {
 		set { image.updates[keyPath] = update(newValue) { ($1?.ciImage).write(to: keyPath, on: $0) } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
+	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///

@@ -38,7 +38,7 @@ extension StyleDescriptor {
 		if shouldSet { update(base) }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
+	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
@@ -47,7 +47,7 @@ extension StyleDescriptor {
 		set { color.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
+	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
@@ -56,7 +56,7 @@ extension StyleDescriptor {
 		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
+	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
@@ -65,7 +65,7 @@ extension StyleDescriptor {
 		set { color.updates[keyPath] = update(newValue) { ($1?.cgColor).write(to: keyPath, on: $0) } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
+	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
@@ -74,7 +74,7 @@ extension StyleDescriptor {
 		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
+	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
@@ -83,7 +83,7 @@ extension StyleDescriptor {
 		set { color.updates[keyPath] = update(newValue) { ($1?.ciColor).write(to: keyPath, on: $0) } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
+	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///

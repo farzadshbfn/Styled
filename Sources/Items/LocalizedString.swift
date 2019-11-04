@@ -11,7 +11,7 @@ import Foundation
 /// Used to fetch string on runtime based on current `LocalizedString` from `.strings` or `.stringsdict` files
 ///
 /// - Note: Unlike other `Styled.Item`s, try not to define `LocalizedString`s as static variables. It's in conflict with Localization's nature.
-/// Instead try to load localizations from a resource (`XML`,` Plist`,` File`, `.strings`, `.stringsdict`, ...)
+/// Instead try to load localizations from a resource (` File`, `.xml`,` .plist`, `.strings`, `.stringsdict`, ...)
 ///
 /// Sample usage:
 ///
@@ -319,6 +319,7 @@ extension LocalizedString {
 	}
 }
 
+// MARK:- String+Extensions
 extension String {
 	
 	/// Will fetch `String` defined in given `LocalizedStringScheme`

@@ -23,7 +23,7 @@ import Foundation
 public protocol StyledCompatible: AnyObject {
 	associatedtype StyledBase: AnyObject
 	
-	/// Use this variable to set  `Color`s, `Font`s, `Image`s  and ...
+	/// Use this variable to set  `Color`s, `Font`s, `Image`s  and `LocalizedString`
 	var sd: StyleDescriptor<StyledBase> { get }
 }
 

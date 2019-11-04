@@ -11,7 +11,7 @@ import class UIKit.UISegmentedControl
 extension StyleDescriptor where Base: UISegmentedControl {
 	
 	/// Wrapper for `setImage(_:forSegmentAt:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter index: `Int`
 	func setImage(_ image: Image?, forSegmentAt index: Int) {
 		onImageSchemeUpdate(
@@ -21,7 +21,7 @@ extension StyleDescriptor where Base: UISegmentedControl {
 	}
 	
 	/// Wrapper for `setBackgroundImage(_:for:barMetrics:)`
-	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchroniziation
+	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter barMetrics: `UIBarMetrics`
 	func setBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {
@@ -31,5 +31,13 @@ extension StyleDescriptor where Base: UISegmentedControl {
 		)
 	}
 	
-	// TODO: Implement `setTitle` when `LocalizedString` is implemented
+	/// Wrapper for `setTitle(_:forSegmentAt:)`
+	/// - Parameter localizedString: `LocalizedString` to synchronize with. Passing `nil` will stop synchronizatoin
+	/// - Parameter index: `Int`
+	func setTitle(_ localizedString: LocalizedString?, forSegmentAt index: Int) {
+		onLocalizedStringSchemeUpdate(
+			withId: #function,
+			do: localizedString.map { ls in { $0.setTitle(.styled(ls), forSegmentAt: index) } }
+		)
+	}
 }

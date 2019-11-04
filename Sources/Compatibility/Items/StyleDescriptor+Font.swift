@@ -38,7 +38,7 @@ extension StyleDescriptor {
 		if shouldSet { update(base) }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
+	/// Using this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
@@ -47,7 +47,7 @@ extension StyleDescriptor {
 		set { font.updates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 	
-	/// Ushin this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
+	/// Using this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
