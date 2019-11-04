@@ -17,3 +17,16 @@ extension Optional {
 		root[keyPath: keyPath] = value
 	}
 }
+
+extension Hashable {
+	
+	/// Combines `self` with `other` using `Hasher` and returns finalized `hashValue`
+	/// - Parameter other: `Hashable` instance
+	/// - Returns: `hashValue` of `self` combined with `other`
+	@inlinable func hashValueCombined<T>(with other: T) -> Int where T: Hashable {
+		var hasher = Hasher()
+		self.hash(into: &hasher)
+		other.hash(into: &hasher)
+		return hasher.finalize()
+	}
+}

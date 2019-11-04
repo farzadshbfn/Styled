@@ -92,7 +92,7 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// 	Color.primary.transform { $0 }
 	/// 	// description: "{primary->t}"
 	/// 	Color("primary", bundle: .main)
-	/// 	// description: "{primary(com.farzadshbfn.styled)}"
+	/// 	// description: "{primary(bundle:com.farzadshbfn.styled)}"
 	///
 	public var description: String { resolver.description }
 	
@@ -124,7 +124,7 @@ extension Lazy where Item == Color {
 	
 	/// Will directly propagate given `UIColor` when needed
 	init(_ uiColor: UIColor) {
-		itemHashValue = Self.hashed("UIColor", uiColor)
+		itemHashValue = uiColor.hashValueCombined(with: "UIColor")
 		itemDescription = "(\(uiColor))"
 		item = { _ in uiColor }
 	}
@@ -168,6 +168,15 @@ extension Color: Item {
 	/// Enables `Color` to accept transformations
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
+	
+}
+
+/// Hiding `Color` information on reflectoin
+extension Color: CustomReflectable {
+	public var customMirror: Mirror { .init(self, children: []) }
+}
+
+extension Color {
 	
 	/// Blends `self`  to the other `Lazy` given
 	///
@@ -308,7 +317,7 @@ extension Color {
 	/// - SeeAlso: `XcodeAssetsColorScheme`
 	@available(iOS 11, *)
 	public init(_ name: String, bundle: Bundle) {
-		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
+		resolver = .lazy(.init(name: "\(name)(bundle:\(bundle.bundleIdentifier ?? ""))") {
 			$0.color(for: .init(name)) ?? UIColor.named(name, in: bundle)
 			})
 	}

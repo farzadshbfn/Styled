@@ -54,8 +54,7 @@ public struct LocalizedString: Hashable, CustomStringConvertible, ExpressibleByS
 	///
 	/// - Parameter value: `String`
 	public init(stringLiteral value: Self.StringLiteralType) {
-//		self.init(value)
-		fatalError("Unimplemented")
+		resolver = .localized(key: value, arguments: [])
 	}
 }
 
@@ -70,7 +69,7 @@ extension LocalizedString: Item {
 	
 	/// Internal type to manage Lazy or direct fetching of `String`
 	enum Resolver: Hashable, CustomStringConvertible {
-		case key(String)
+		case localized(key: String, arguments: [Argument])
 		case lazy(Lazy)
 		
 		/// Contains description of current `Resolver` state.
@@ -79,37 +78,90 @@ extension LocalizedString: Item {
 		///
 		var description: String {
 			switch self {
-			case .key(let name): return name
+			case .localized(let key, let arguments):
+				return "\(key){\(arguments)}"
 			case .lazy(let lazy): return "{\(lazy)}"
 			}
 		}
 	}
 	
-	public struct StringInterpolation: StringInterpolationProtocol {
-		enum Item {
-			case literal(String)
+	struct Argument: Hashable, CustomReflectable {
+		let value: Any
+		let formatter: Formatter?
+		let valueHashValue: Int
+		
+		init<Value>(value: Value, formatter: Formatter? = nil) where Value: Hashable {
+			self.value = value
+			self.formatter = formatter
+			self.valueHashValue = value.hashValue
 		}
-		/// A type that represents a `LocalizedString` keys
+		
+		func hash(into hasher: inout Hasher) {
+			hasher.combine(hashValue)
+		}
+		
+		var customMirror: Mirror {
+			.init(
+				self,
+				children: ["value": value, "formatter": formatter as Any],
+				displayStyle: .struct
+			)
+		}
+		
+		static func == (lhs: Argument, rhs: Argument) -> Bool {
+			lhs.hashValue == rhs.hashValue
+		}
+	}
+	
+	public struct StringInterpolation: StringInterpolationProtocol {
+		
 		public typealias StringLiteralType = String
 		
+		var key: String = ""
+		var arguments: [Argument] = []
+		
 		public init(literalCapacity: Int, interpolationCount: Int) {
-			fatalError("Unimplemented")
+			key.reserveCapacity(literalCapacity + interpolationCount * 2)
+			arguments.reserveCapacity(interpolationCount)
 		}
 		
 		public mutating func appendLiteral(_ literal: String) {
-			fatalError("Unimplemented")
+			key.append(literal)
 		}
 		
-		public mutating func appendInterpolation<T>(_ value: T) where T: CustomStringConvertible {
-			fatalError("Unimplemented")
+		public mutating func appendInterpolation(_ string: String) {
+			arguments.append(.init(value: string))
+			key.append("%@")
 		}
 		
+		public mutating func appendInterpolation<T>(_ value: T) where T : CustomStringConvertible {
+			arguments.append(.init(value: value.description))
+			key.append("%@")
+		}
+		
+		public mutating func appendInterpolation<Subject>(_ subject: Subject, formatter: Formatter? = nil) where Subject: ReferenceConvertible {
+			arguments.append(.init(value: subject, formatter: formatter))
+			key.append("%@")
+		}
+		
+		public mutating func appendInterpolation<Subject>(_ subject: Subject, formatter: Formatter? = nil) where Subject: NSObject {
+			arguments.append(.init(value: subject, formatter: formatter))
+			key.append("%@")
+		}
+		
+		public mutating func appendInterpolation<Value>(_ value: Value, specifier: String = "%@") {
+			arguments.append(.init(value: "\(value)"))
+			key.append(specifier)
+		}
 	}
 	
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
 	public init(stringInterpolation: LocalizedString.StringInterpolation) {
-		fatalError("Unimplemented")
+		resolver = .localized(
+			key: stringInterpolation.key,
+			arguments: stringInterpolation.arguments
+		)
 	}
 	
 	func resolve(from scheme: LocalizedStringScheme) -> String? {

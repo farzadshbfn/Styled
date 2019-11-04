@@ -88,7 +88,7 @@ public struct Image: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// 	Image.profile.renderingMode(.alwaysTemplate)
 	/// 	// description: "profile(alwaysTemplate)"
 	/// 	Image("profile", bundle: .main)
-	/// 	// description: "{profile(com.farzadshbfn.styled)}"
+	/// 	// description: "{profile(bundle:com.farzadshbfn.styled)}"
 	///
 	public var description: String { resolver.description }
 	
@@ -154,6 +154,15 @@ extension Image: Item {
 	/// Enables `Image` to accept transformations
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
+	
+}
+
+/// Hiding `Image` information on reflectoin
+extension Image: CustomReflectable {
+	public var customMirror: Mirror { .init(self, children: []) }
+}
+
+extension Image {
 	
 	/// Will return the backed `Image` with given `renderingMode`
 	///
@@ -240,7 +249,7 @@ extension Image {
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsImageScheme`
 	public init(_ name: String, bundle: Bundle) {
-		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
+		resolver = .lazy(.init(name: "\(name)(bundle:\(bundle.bundleIdentifier ?? ""))") {
 			$0.image(for: .init(name)) ?? UIImage.named(name, in: bundle)
 			})
 	}

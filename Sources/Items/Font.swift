@@ -169,6 +169,11 @@ extension Font: Item {
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 }
 
+/// Hiding `Font` information on reflectoin
+extension Font: CustomReflectable {
+	public var customMirror: Mirror { .init(self, children: []) }
+}
+
 // MARK:- FontScheme
 /// Use this protocol to provide `UIFont` for `Styled`
 ///

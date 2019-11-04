@@ -17,6 +17,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
 		
+		let df = DateFormatter()
+		df.dateFormat = "dd/mm/yyyy"
+		
+		let key: LocalizedString = "khiar \(Date(), formatter: df)"
+		
+		dump(key)
 		return true
 	}
 }
