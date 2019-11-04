@@ -31,6 +31,9 @@ public final class Config {
 	/// Notification will be posted when `fontScheme` changes
 	public static let fontSchemeNeedsUpdate = Notification.Name(rawValue: "StyledFontSchemeNeedsUpdateNotification")
 	
+	/// Notification will be posted when `localizedStringScheme` changes
+	public static let localizedStringSchemeNeedsUpdate = Notification.Name(rawValue: "StyledLocalizedStringSchemeNeedsUpdateNotification")
+	
 
 	/// Defines current `ColorScheme` used throughout the application
 	///
@@ -57,5 +60,14 @@ public final class Config {
 	/// - Note: Default value is `DefaultFontScheme`
 	public static var fontScheme: FontScheme! = DefaultFontScheme() {
 		didSet { NotificationCenter.default.post(name: fontSchemeNeedsUpdate, object: nil) }
+	}
+	
+	/// Defines current `LocalizedStringScheme` used throughout the application
+	///
+	/// Setting this property will trigger `localizedStringSchemeNeedsUpdate` notification
+	///
+	/// - Note: Default value is `DefaultLocalizedStringScheme`
+	public static var localizedStringScheme: LocalizedStringScheme! = DefaultLocalizedStringScheme() {
+		didSet { NotificationCenter.default.post(name: localizedStringSchemeNeedsUpdate, object: nil) }
 	}
 }

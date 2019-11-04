@@ -290,28 +290,54 @@ public protocol LocalizedStringScheme {
 	func string(for localizedString: LocalizedString) -> String?
 }
 
+/// Will fetch `String`s from **Localizable.strings** and **Localizable.stringsdict** files
+/// - SeeAlso: LocalizedString(_:bundle:table:)
 public struct DefaultLocalizedStringScheme: LocalizedStringScheme {
 	
 	public init() { }
 	
 	public func string(for localizedString: LocalizedString) -> String? {
-		.init(
-			format: Bundle.main.localizedString(
-				forKey: localizedString.key!,
-				value: localizedString.key!,
-				table: nil
-			),
-			arguments: localizedString.arguments!
-		)
+		.localized(localizedString, in: .main, table: nil)
 	}
 }
 
 extension LocalizedString {
-	// TODO: Bundle
+	
+	/// Initializes a LocalizedString which will look in the Bundle for **.strings** and **.stringdict**
+	///
+	/// - Note: `LocalizedString`s initialized with this initializer, will not be sent **directly** to `LocalizedStringScheme`.
+	/// In `LocalizedStringScheme` read `key` & `arguments` variables to determine what to do.
+	///
+	/// - Parameter localizedString: `LocalizedString` to look-up
+	/// - Parameter bundle: `Bundle` to search for localizable files in
+	/// - Parameter table: Name of **.strings** and **.stringsdict** files. If `nil` is provided,
+	/// will look into **Localizable.strings** and **Localizable.stringsdict**
+	public init(_ localizedString: LocalizedString, bundle: Bundle, table: String? = nil) {
+		resolver = .lazy(.init(name: "\(localizedString)(bundle:\(bundle.bundleIdentifier ?? ""))") {
+			$0.string(for: localizedString) ?? String.localized(localizedString, in: bundle, table: table)
+		})
+	}
 }
 
 extension String {
 	
-	public static func styled(_ localizedString: LocalizedString, from scheme: LocalizedStringScheme) -> String? { localizedString.resolve(from: scheme)
+	/// Will fetch `String` defined in given `LocalizedStringScheme`
+	/// - Parameter localizedString: `LocalizedString`
+	/// - Parameter scheme: `LocalizedStringScheme` to search for string. (default: `Config.localizedStringScheme`)
+	public static func styled(_ localizedString: LocalizedString, from scheme: LocalizedStringScheme = Config.localizedStringScheme) -> String? { localizedString.resolve(from: scheme)
+	}
+	
+	/// Will look in the Bundle for **.strings** and **.stringdict**
+	/// - Parameter localizedString: `LocalizedString` to look-up
+	/// - Parameter bundle: `Bundle` to search for localizable files in
+	/// - Parameter table: Name of **.strings** and **.stringsdict** files. If `nil` is provided,
+	/// will look into **Localizable.strings** and **Localizable.stringsdict**
+	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle?, table: String?) -> String? {
+		guard let key = localizedString.key, let args = localizedString.arguments else { return nil }
+		let bundle = bundle ?? .main
+		return .init(
+			format: bundle.localizedString(forKey: key, value: key, table: table),
+			arguments: args
+		)
 	}
 }

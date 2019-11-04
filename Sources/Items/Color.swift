@@ -286,7 +286,7 @@ public protocol ColorScheme {
 /// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
 /// Will return `nil` if nothing were found.
 ///
-/// - SeeAlso: `Color(_:,bundle:)`
+/// - SeeAlso: Color(_:bundle:)
 @available(iOS 11, *)
 public struct DefaultColorScheme: ColorScheme {
 	
@@ -317,7 +317,6 @@ extension Color {
 extension UIColor {
 	
 	/// Will fetch `UIColor` defined in given `ColorScheme`
-	///
 	/// - Parameter color: `Color`
 	/// - Parameter scheme: `ColorScheme` to search for color. (default: `Config.colorScheme`)
 	open class func styled(_ color: Color, from scheme: ColorScheme = Config.colorScheme) -> UIColor? {

@@ -220,7 +220,7 @@ public protocol ImageScheme {
 /// - Note: `Image.isPrefixMatchingEnabled` does not affect `DefaultImageScheme` since
 /// Assets Catalog  uses prefixMatching for loading `UIImage`
 ///
-/// - SeeAlso: `Image(_:,bundle:)`
+/// - SeeAlso: Image(_:bundle:)
 public struct DefaultImageScheme: ImageScheme {
 	
 	public init() { }
@@ -259,7 +259,6 @@ extension UIImage {
 	}
 	
 	/// Will fetch `UIImage` defined in given `ImageScheme`
-	///
 	/// - Parameter image: `Image`
 	/// - Parameter scheme: `ImageScheme` to search for image. (default: `Config.imageScheme`)
 	open class func styled(_ image: Image, from scheme: ImageScheme = Config.imageScheme) -> UIImage? {
