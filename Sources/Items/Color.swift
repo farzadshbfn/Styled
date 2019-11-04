@@ -54,6 +54,19 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// E.g: `primary.lvl1` can be matched with `primary`
 	public static var isPrefixMatchingEnabled: Bool = true
 	
+	/// This type is used internally to manage transformations if applied to current `Color` before fetching `UIColor`
+	let resolver: Resolver
+	
+	/// Name of the `Color`.
+	///
+	/// - Note: This field is optional because there might be transformations applied to this `Color`, hence no specific `name` is available
+	public var name: String? {
+		switch resolver {
+		case .name(let name): return name
+		default: return nil
+		}
+	}
+	
 	/// Initiates a `Color` with given name, to be fetched later
 	///
 	/// - Note: Make sure to follow **dot.case** format for naming Colors
@@ -61,19 +74,9 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// - Parameter name: Name of the color.
 	public init(_ name: String) { resolver = .name(name) }
 	
-	/// This type is used internally to manage transformations if applied to current `Color` before fetching `UIColor`
-	let resolver: Resolver
-	
-	/// Name of the `Color`.
-	///
-	/// - Note: This field is optional because there might be transformations applied to this `Color`, hence no specific `name` is available
-	///
-	public var name: String? {
-		switch resolver {
-		case .name(let name): return name
-		default: return nil
-		}
-	}
+	/// Ease of use on defining `Color` variables
+	/// - Parameter value: `String`
+	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
 	
 	/// Describes specification of `UIColor` that will be *fetched*/*generated*
 	///
@@ -82,33 +85,21 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	///  Samples:
 	///
 	/// 	Color("primary")
-	/// 	// description: "primary"
+	/// 	// description: `primary`
 	/// 	Color.blending(.primary, 0.30, .secondary)
-	/// 	// description: "{primary*0.30+secondary*0.70}"
+	/// 	// description: `{primary*0.30+secondary*0.70}`
 	/// 	Color.primary.blend(with: .black)
-	/// 	// description: "{primary*0.50+(UIExtendedGrayColorSpace 0 1)*0.50}"
+	/// 	// description: `{primary*0.50+(UIExtendedGrayColorSpace 0 1)*0.50}`
 	/// 	Color.opacity(0.9, of: .primary)
-	/// 	// description: "{primary(0.90)}"
+	/// 	// description: `{primary(0.90)}`
 	/// 	Color.primary.transform { $0 }
-	/// 	// description: "{primary->t}"
+	/// 	// description: `{primary->t}`
 	/// 	Color("primary", bundle: .main)
-	/// 	// description: "{primary(bundle:com.farzadshbfn.styled)}"
-	///
+	/// 	// description: `{primary(bundle:com.farzadshbfn.styled)}`
 	public var description: String { resolver.description }
-	
-	/// Ease of use on defining `Color` variables
-	///
-	/// 	extension Color {
-	/// 	    static let primary:   Self = "primary"
-	/// 	    static let secondary: Self = "secondary"
-	/// 	}
-	///
-	/// - Parameter value: `String`
-	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
 	
 	/// Enables the pattern-matcher (i.e switch-statement) to patch `primary.lvl1` with `primary` if `primary.lvl1` is not available
 	/// in the switch-statement
-	///
 	/// - Parameter pattern: `Color` to match as prefix of the current value
 	/// - Parameter value: `Color` given to find the best match for
 	@inlinable public static func ~=(pattern: Color, value: Color) -> Bool {
@@ -147,7 +138,6 @@ extension Color: Item {
 		/// Contains description of current `Resolver` state.
 		///
 		/// - Note: `Lazy` is surrounded by `{...}`
-		///
 		var description: String {
 			switch self {
 			case .name(let name): return name
@@ -171,7 +161,7 @@ extension Color: Item {
 	
 }
 
-/// Hiding `Color` information on reflectoin
+/// Hiding `Color` information on reflection
 extension Color: CustomReflectable {
 	public var customMirror: Mirror { .init(self, children: []) }
 }
@@ -263,7 +253,6 @@ extension Color {
 /// 	        }
 /// 	    }
 /// 	}
-///
 public protocol ColorScheme {
 	
 	/// `StyleDescriptor` will use this method to fetch `UIColor`

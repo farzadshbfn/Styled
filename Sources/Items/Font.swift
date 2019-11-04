@@ -21,7 +21,6 @@ import class UIKit.UIFont
 ///
 ///  	label.sd.font = .title
 ///  	label.sd.font = .init(.body, weight: .ultraLight)
-///
 public struct Font: Hashable, CustomStringConvertible {
 	
 	/// Mirroring `UIFont.TextStyle` for compatibility
@@ -33,34 +32,9 @@ public struct Font: Hashable, CustomStringConvertible {
 	/// This type is used internally to manage transformations if applied to current `Font` before fetching `UIFont`
 	let resolver: Resolver
 	
-	/// Initiates a `Font` with specifications given to be fetched later
-	///
-	/// - Parameter size: `Font.Size` instance to specify size of the Font
-	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-	public init(size: Size, weight: Weight = .regular) {
-		resolver = .font(size: size, weight: weight)
-	}
-	
-	/// Initiates a `Font` with specifications given to be fetched later
-	///
-	/// - Parameter textStyle: `UIFont.TextStyle` instance
-	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-	public init(_ textStyle: TextStyle, weight: Weight = .regular) {
-		resolver = .font(size: .dynamic(textStyle), weight: weight)
-	}
-	
-	/// Initiates a `Font` with specifications given to be fetched later
-	///
-	/// - Parameter size: Font's `pointSize`
-	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
-	public init(_ size: CGFloat, weight: Weight = .regular) {
-		resolver = .font(size: .static(size), weight: weight)
-	}
-	
 	/// Size of the `Font`.
 	///
 	/// - Note: This field is optional because there might be transformations applied to this `Font`, hence no specific `size` is available
-	///
 	public var size: Size? {
 		switch resolver {
 		case .font(let size, _): return size
@@ -71,7 +45,6 @@ public struct Font: Hashable, CustomStringConvertible {
 	/// Weight of the `Font`.
 	///
 	/// - Note: This field is optional because there might be transformations applied to this `Font`, hence no specific `weight` is available
-	///
 	public var weight: Weight? {
 		switch resolver {
 		case .font(_, let weight): return weight
@@ -79,15 +52,25 @@ public struct Font: Hashable, CustomStringConvertible {
 		}
 	}
 	
-	/// size and weight of the `Font`.
-	///
-	/// - Note: This field is optional because there might be transformations applied to this `Font`, hence no specific `size` and `weight` are available
-	///
-	public var sizeAndWeight: (size: Size, weight: Weight)? {
-		switch resolver {
-		case .font(let size, let weight): return (size, weight)
-		default: return nil
-		}
+	/// Initiates a `Font` with specifications given to be fetched later
+	/// - Parameter size: `Font.Size` instance to specify size of the Font
+	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
+	public init(size: Size, weight: Weight = .regular) {
+		resolver = .font(size: size, weight: weight)
+	}
+	
+	/// Initiates a `Font` with specifications given to be fetched later
+	/// - Parameter textStyle: `UIFont.TextStyle` instance
+	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
+	public init(_ textStyle: TextStyle, weight: Weight = .regular) {
+		resolver = .font(size: .dynamic(textStyle), weight: weight)
+	}
+	
+	/// Initiates a `Font` with specifications given to be fetched later
+	/// - Parameter size: Font's `pointSize`
+	/// - Parameter weight: `UIFont.Weight` instance (default is `.regular`)
+	public init(_ size: CGFloat, weight: Weight = .regular) {
+		resolver = .font(size: .static(size), weight: weight)
 	}
 	
 	/// Describes specification of `UIFont` that will be *fetched*/*generated*
@@ -97,12 +80,11 @@ public struct Font: Hashable, CustomStringConvertible {
 	///  Samples:
 	///
 	/// 	Font(42)
-	/// 	// description: "42(0.0)"
+	/// 	// description: `42(0.0)`
 	/// 	Font(.body, weight: .bold)
-	/// 	// description: "UICTFontTextStyleBody(0.4000000059604645)"
+	/// 	// description: `UICTFontTextStyleBody(0.4000000059604645)`
 	/// 	Font(.title1).transform { $0 }
-	/// 	// description:  "{UICTFontTextStyleTitle1(0.0)->t}"
-	///
+	/// 	// description: `{UICTFontTextStyleTitle1(0.0)->t}`
 	public var description: String { resolver.description }
 }
 
@@ -169,7 +151,7 @@ extension Font: Item {
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 }
 
-/// Hiding `Font` information on reflectoin
+/// Hiding `Font` information on reflection
 extension Font: CustomReflectable {
 	public var customMirror: Mirror { .init(self, children: []) }
 }
@@ -188,7 +170,6 @@ extension Font: CustomReflectable {
 /// 	        }
 /// 	    }
 /// 	}
-///
 public protocol FontScheme {
 	
 	/// `StyleDescriptor` will use this method to fetch `UIFont`
@@ -237,7 +218,6 @@ public struct DefaultFontScheme: FontScheme {
 extension UIFont {
 	
 	/// Will fetch `UIFont` defined in given `FontScheme`
-	///
 	/// - Parameter font: `Font`
 	/// - Parameter scheme: `FontScheme` to search for font. (default: `Config.fontScheme`)
 	open class func styled(_ font: Font, from scheme: FontScheme = Config.fontScheme) -> UIFont? {

@@ -54,6 +54,19 @@ public struct Image: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// E.g: `profile.fill` can be matched with `profile`
 	public static var isPrefixMatchingEnabled: Bool = true
 	
+	/// This type is used internally to manage transformations if applied to current `Image` before fetching `UIImage`
+	let resolver: Resolver
+	
+	/// Name of the `Image`.
+	///
+	/// - Note: This field is optional because there might be transformations applied to this `Image`, hence no specific `name` is available
+	public var name: String? {
+		switch resolver {
+		case .name(let name): return name
+		default: return nil
+		}
+	}
+	
 	/// Initiates a `Image` with given name, to be fetched later
 	///
 	/// - Note: Make sure to follow **dot.case** format for naming Images
@@ -61,19 +74,9 @@ public struct Image: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// - Parameter name: Name of the Image.
 	public init(_ name: String) { resolver = .name(name) }
 	
-	/// This type is used internally to manage transformations if applied to current `Image` before fetching `UIImage`
-	let resolver: Resolver
-	
-	/// Name of the `Image`.
-	///
-	/// - Note: This field is optional because there might be transformations applied to this `Image`, hence no specific `name` is available
-	///
-	public var name: String? {
-		switch resolver {
-		case .name(let name): return name
-		default: return nil
-		}
-	}
+	/// Ease of use on defining `Image` variables
+	/// - Parameter value: `String`
+	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
 	
 	/// Describes specification of `UIImage` that will be *fetched*/*generated*
 	///
@@ -82,29 +85,18 @@ public struct Image: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	///  Samples:
 	///
 	/// 	Image("profile")
-	/// 	// description: "profile"
+	/// 	// description: `profile`
 	/// 	Image.profile.transform { $0 }
-	/// 	// description:  "{profile->t}"
+	/// 	// description: `{profile->t}`
 	/// 	Image.profile.renderingMode(.alwaysTemplate)
-	/// 	// description: "profile(alwaysTemplate)"
+	/// 	// description: `profile(alwaysTemplate)`
 	/// 	Image("profile", bundle: .main)
-	/// 	// description: "{profile(bundle:com.farzadshbfn.styled)}"
+	/// 	// description: `{profile(bundle:com.farzadshbfn.styled)}`
 	///
 	public var description: String { resolver.description }
 	
-	/// Ease of use on defining `Image` variables
-	///
-	/// 	extension Image {
-	/// 	    static let profile:   Self = "profile"
-	/// 	    static let dashboard: Self = "dashboard"
-	/// 	}
-	///
-	/// - Parameter value: `String`
-	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
-	
 	/// Enables the pattern-matcher (i.e switch-statement) to patch `profile.fill` with `profile` if `profile.fill` is not available
 	/// in the switch-statement
-	///
 	/// - Parameter pattern: `Image` to match as prefix of the current value
 	/// - Parameter value: `Image` given to find the best match for
 	@inlinable public static func ~=(pattern: Image, value: Image) -> Bool {
@@ -154,10 +146,9 @@ extension Image: Item {
 	/// Enables `Image` to accept transformations
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
-	
 }
 
-/// Hiding `Image` information on reflectoin
+/// Hiding `Image` information on reflection
 extension Image: CustomReflectable {
 	public var customMirror: Mirror { .init(self, children: []) }
 }
@@ -165,7 +156,6 @@ extension Image: CustomReflectable {
 extension Image {
 	
 	/// Will return the backed `Image` with given `renderingMode`
-	///
 	/// - Parameter renderingMode: `UIImage.RenderingMode`
 	public func renderingMode(_ renderingMode: UIImage.RenderingMode) -> Image {
 		return .init(lazy: .init(name: "\(self)(\(renderingMode.rawValue))") { scheme in
@@ -175,7 +165,6 @@ extension Image {
 	}
 	
 	/// Will return the given `Image` with the given renderingMode
-	///
 	/// - Parameter renderingMode: `UIImage.RenderingMode`
 	/// - Parameter image: `Image`
 	public static func renderingMode(_ renderingMode: UIImage.RenderingMode,
