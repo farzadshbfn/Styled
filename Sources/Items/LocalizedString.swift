@@ -325,7 +325,8 @@ extension String {
 	/// Will fetch `String` defined in given `LocalizedStringScheme`
 	/// - Parameter localizedString: `LocalizedString`
 	/// - Parameter scheme: `LocalizedStringScheme` to search for string. (default: `Config.localizedStringScheme`)
-	public static func styled(_ localizedString: LocalizedString, from scheme: LocalizedStringScheme = Config.localizedStringScheme) -> String? { localizedString.resolve(from: scheme)
+	public static func styled(_ localizedString: LocalizedString, from scheme: LocalizedStringScheme = Config.localizedStringScheme) -> String? {
+		localizedString.resolve(from: scheme)
 	}
 	
 	/// Will look in the Bundle for **.strings** and **.stringdict**

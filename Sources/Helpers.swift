@@ -30,3 +30,25 @@ extension Hashable {
 		return hasher.finalize()
 	}
 }
+
+extension NSObject {
+	
+	/// Swizzles two methods from current Class Object.
+	/// Better to use it in lazy static let
+	///
+	///     static let classInit: Void = {
+	///         swizzleMethods(..., ...)
+	///     }
+	///
+	/// - Important: This method should be ran just once (or thread-safe)
+	///
+	/// - Parameters:
+	///   - original: Selector for original method
+	///   - swizzled: Selector for swizzled method
+	class func swizzleMethods(original: Selector, swizzled: Selector) {
+		guard
+			let originalMethod = class_getInstanceMethod(self, original),
+			let swizzledMethod = class_getInstanceMethod(self, swizzled) else { return }
+		method_exchangeImplementations(originalMethod, swizzledMethod)
+	}
+}

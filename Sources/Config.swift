@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import UIKit
 
 /// Contains Configurations for `Styled` to operate
 public final class Config {
-	static let shared = Config()
 	
-	init() { }
+	/// Used internally to keep receiving `UIContentSizeCategory.didChangeNotification` events
+	static var contentSizeCategoryNotificationObserver: NSObjectProtocol?
 	
 	/// Returns `UIColor.StyledAssetCatalog` for iOS11 and later.
 	static let initialColorScheme: ColorScheme? = {
@@ -68,5 +69,41 @@ public final class Config {
 	/// - Note: Default value is `DefaultLocalizedStringScheme`
 	public static var localizedStringScheme: LocalizedStringScheme! = DefaultLocalizedStringScheme() {
 		didSet { NotificationCenter.default.post(name: localizedStringSchemeNeedsUpdate, object: nil) }
+	}
+}
+
+extension Config {
+	
+	/// This type is used in `onContentSizeCategoryDidChange(_:)` to determine what to do
+	public enum FontSchemeUpdate {
+		/// Will do nothing
+		case none
+		/// Will only raise `fontSchemeNeedsUpdate` notification
+		case update
+		/// Will change `fontScheme` with given scheme and raise `fontSchemeNeedsUpdate` notification
+		case replace(with: FontScheme)
+	}
+	
+	/// Call this method to make application respond to `UIContentSizeCategory.didChangeNotification` and update fonts
+	///
+	/// - PreCondition: This method should be called only once
+	///
+	/// - Parameter update: `FontSchemeUpdate` instance to determine what to do
+	public class func onContentSizeCategoryDidChange(_ update: @escaping (UIContentSizeCategory) -> FontSchemeUpdate) {
+		precondition(contentSizeCategoryNotificationObserver == nil, "This method should be called only once")
+		
+		contentSizeCategoryNotificationObserver = NotificationCenter.default.addObserver(
+			forName: UIContentSizeCategory.didChangeNotification,
+			object: nil,
+			queue: .main,
+			using: { notif in
+				guard let contentSizeCategory = notif.userInfo?[UIContentSizeCategory.newValueUserInfoKey] as? UIContentSizeCategory
+					else { return }
+				switch update(contentSizeCategory) {
+				case .none: break
+				case .update: NotificationCenter.default.post(name: fontSchemeNeedsUpdate, object: nil)
+				case .replace(let scheme): fontScheme = scheme
+				}
+		})
 	}
 }
