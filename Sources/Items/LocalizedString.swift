@@ -19,12 +19,26 @@ public struct LocalizedString: Hashable, CustomStringConvertible, ExpressibleByS
 	///
 	/// - Note: This field is optional because there might be transformations applied to this `LocalizedString`, hence no specific `key` is available
 	///
-//	public var key: String? {
-//		switch resolver {
-//		case .key(let key): return key
-//		default: return nil
-//		}
-//	}
+	public var key: String? {
+		switch resolver {
+		case .localized(let key, _): return key
+		default: return nil
+		}
+	}
+	
+	public var arguments: [String]? {
+		switch resolver {
+		case .localized(_, let arguments): return arguments.map { $0.description }
+		default: return nil
+		}
+	}
+	
+	public var keyAndArguments: (key: String, arguments: [String])? {
+		switch resolver {
+		case .localized(let key, let arguments): return (key, arguments.map { $0.description } )
+		default: return nil
+		}
+	}
 	
 	/// Describes specification of `String` that will be *fetched*/*generated*
 	///
@@ -85,7 +99,7 @@ extension LocalizedString: Item {
 		}
 	}
 	
-	struct Argument: Hashable, CustomReflectable {
+	struct Argument: Hashable, CustomStringConvertible {
 		let value: Any
 		let formatter: Formatter?
 		let valueHashValue: Int
@@ -96,21 +110,11 @@ extension LocalizedString: Item {
 			self.valueHashValue = value.hashValue
 		}
 		
-		func hash(into hasher: inout Hasher) {
-			hasher.combine(hashValue)
-		}
+		var description: String { formatter?.string(for: value) ?? "\(value)" }
 		
-		var customMirror: Mirror {
-			.init(
-				self,
-				children: ["value": value, "formatter": formatter as Any],
-				displayStyle: .struct
-			)
-		}
+		func hash(into hasher: inout Hasher) { hasher.combine(hashValue) }
 		
-		static func == (lhs: Argument, rhs: Argument) -> Bool {
-			lhs.hashValue == rhs.hashValue
-		}
+		static func == (lhs: Argument, rhs: Argument) -> Bool { lhs.hashValue == rhs.hashValue }
 	}
 	
 	public struct StringInterpolation: StringInterpolationProtocol {
@@ -130,26 +134,43 @@ extension LocalizedString: Item {
 		}
 		
 		public mutating func appendInterpolation(_ string: String) {
+			print(#line)
 			arguments.append(.init(value: string))
 			key.append("%@")
 		}
 		
 		public mutating func appendInterpolation<T>(_ value: T) where T : CustomStringConvertible {
+			print(#line)
 			arguments.append(.init(value: value.description))
 			key.append("%@")
 		}
 		
+		public mutating func appendInterpolation<T>(_ value: T) where T : CustomStringConvertible & Hashable {
+			print(#line)
+			arguments.append(.init(value: value))
+			key.append("%@")
+		}
+		
 		public mutating func appendInterpolation<Subject>(_ subject: Subject, formatter: Formatter? = nil) where Subject: ReferenceConvertible {
+			print(#line)
 			arguments.append(.init(value: subject, formatter: formatter))
 			key.append("%@")
 		}
 		
 		public mutating func appendInterpolation<Subject>(_ subject: Subject, formatter: Formatter? = nil) where Subject: NSObject {
+			print(#line)
 			arguments.append(.init(value: subject, formatter: formatter))
 			key.append("%@")
 		}
 		
+		public mutating func appendInterpolation<Value>(_ value: Value, specifier: String = "%@") where Value: Hashable {
+			print(#line)
+			arguments.append(.init(value: value))
+			key.append(specifier)
+		}
+		
 		public mutating func appendInterpolation<Value>(_ value: Value, specifier: String = "%@") {
+			print(#line)
 			arguments.append(.init(value: "\(value)"))
 			key.append(specifier)
 		}
@@ -164,17 +185,35 @@ extension LocalizedString: Item {
 		)
 	}
 	
-	func resolve(from scheme: LocalizedStringScheme) -> String? {
-		fatalError("Unimplemented")
-//		switch resolver {
-//		case .key: return scheme.string(for: self)
-//		case .lazy(let lazy): return lazy.item(scheme)
-//		}
+	public func resolve(from scheme: LocalizedStringScheme) -> String? {
+		switch resolver {
+		case .localized: return scheme.string(for: self)
+		case .lazy(let lazy): return lazy.item(scheme)
+		}
 	}
 }
 
+extension LocalizedString: CustomReflectable {
+	public var customMirror: Mirror { .init(self, children: []) }
+}
 
-protocol LocalizedStringScheme {
+public protocol LocalizedStringScheme {
 	
 	func string(for localizedString: LocalizedString) -> String?
+}
+
+public struct DefaultLocalizedStringScheme: LocalizedStringScheme {
+	
+	public init() { }
+	
+	public func string(for localizedString: LocalizedString) -> String? {
+		.init(
+			format: Bundle.main.localizedString(
+				forKey: localizedString.key!,
+				value: localizedString.key!,
+				table: nil
+			),
+			arguments: localizedString.arguments!
+		)
+	}
 }

@@ -271,7 +271,8 @@ public protocol ColorScheme {
 	/// - Important: **Do not** call this method directly. use `UIColor.styled(_:)` instead.
 	///
 	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `color`
-	///
+	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
+	/// will receive `nil` is `UIColor`
 	/// - Note: It's guaranteed all `Color`s sent to this message, will contain field `name`
 	///
 	/// Sample for `DarkColorScheme`:
@@ -302,7 +303,7 @@ public struct DefaultColorScheme: ColorScheme {
 	
 	public init() { }
 	
-	public func color(for color: Color) -> UIColor? { .named(color.description, in: nil) }
+	public func color(for color: Color) -> UIColor? { .named(color.name!, in: nil) }
 }
 
 extension Color {
