@@ -27,6 +27,10 @@ extension StyleDescriptor {
 	
 	/// Will get called when  `Config.localizedStringSchemeNeedsUpdate` is raised or `synchronizeLocalizedString()` is called
 	/// or `customLocalizedStringScheme` is set
+	///
+	/// - Note: Use this method in cases that a specific variable can not be set with `LocalizedStringKey` but you need to be aware about it's changes. **Object** will
+	/// be provided in `update` closure to omit retain-cycles
+	///
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`

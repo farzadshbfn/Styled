@@ -26,6 +26,10 @@ extension StyleDescriptor {
 	public func synchronizeImages() { image.synchronize() }
 	
 	/// Will get called when  `Config.imageSchemeNeedsUpdate` is raised or `synchronizeImages()` is called or `customImageScheme` is set
+	///
+	/// - Note: Use this method in cases that a specific variable can not be set with `Image` but you need to be aware about it's changes. **Object** will
+	/// be provided in `update` closure to omit retain-cycles
+	///
 	/// - Parameter id: A unique Identifier to gain controler over closure
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
