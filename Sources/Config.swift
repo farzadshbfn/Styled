@@ -12,10 +12,14 @@ import UIKit
 public final class Config {
 	
 	/// Used internally to keep receiving `UIContentSizeCategory.didChangeNotification` events
-	static var contentSizeCategoryNotificationObserver: NSObjectProtocol?
+	private static var contentSizeCategoryNotificationObserver: NSObjectProtocol?
+	
+	/// Used internally to detect if `UIUserInterfaceStyle` changes between `light` and `dark`
+	@available(iOS 12.0, *)
+	private static var userInterfaceStyle: UIUserInterfaceStyle?
 	
 	/// Returns `UIColor.StyledAssetCatalog` for iOS11 and later.
-	static let initialColorScheme: ColorScheme? = {
+	private static let initialColorScheme: ColorScheme? = {
 		if #available(iOS 11, *) {
 			return DefaultColorScheme()
 		}
@@ -74,7 +78,7 @@ public final class Config {
 
 extension Config {
 	
-	/// This type is used in `onContentSizeCategoryDidChange(_:)` to determine what to do
+	/// This type is used in `onContentSizeCategoryDidChange(_:)` to determine what to do when `UIContentSizeCategory` changes
 	public enum FontSchemeUpdate {
 		/// Will do nothing
 		case none
@@ -106,4 +110,60 @@ extension Config {
 				}
 		})
 	}
+	
+	/// This type is used in `onUserInterfaceStyleDidChange(_:)` to determine what to do when `UIUserInterfaceStyle` changes
+	public enum ColorSchemeUpdate {
+		/// Will do nothing
+		case none
+		/// Will only raise `colorSchemeNeedsUpdate` notification
+		case update
+		/// Will change `colorScheme` with given scheme and raise `colorSchemeNeedsUpdate` notification
+		case replace(with: ColorScheme)
+	}
+	
+	/// Call this method to make application respond to `UIUserInterfaceStyle` changes and update colors
+	///
+	/// - PreCondition: This method should be called only once
+	///
+	/// - Parameter update: `ColorSchemeUpdate` instance to determine what to do
+	@available(iOS 12.0, *)
+	public class func onUserInterfaceStyleDidChange(_ update: @escaping (UIUserInterfaceStyle) -> ColorSchemeUpdate) {
+		precondition(userInterfaceStyle == nil, "This method should be called only once")
+		
+		userInterfaceStyle = UIScreen.main.traitCollection.userInterfaceStyle
+		
+		UIWindow.userInterfaceStyleUpdate = { style in
+			guard style != userInterfaceStyle else { return }
+			userInterfaceStyle = style
+			
+			switch update(style) {
+			case .none: break
+			case .update: NotificationCenter.default.post(name: colorSchemeNeedsUpdate, object: nil)
+			case .replace(let scheme): colorScheme = scheme
+			}
+		}
+		
+		_ = UIWindow.traitCollectionDidChangeSwizzler
+	}
+}
+
+@available(iOS 12.0, *)
+extension UIWindow {
+	
+	/// Config uses this method to become aware of `UIUserInterfaceStyle` changes
+	fileprivate static var userInterfaceStyleUpdate: ((UIUserInterfaceStyle) -> Void)?
+	
+	/// Swizzled method of `traitCollectionDidChange(_:)` which calls `userInterfaceStyleUpdate` to inform `Config`
+	/// about `UIUserInterfaceStyle` changes
+	@objc private func swizzled_traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+		UIWindow.userInterfaceStyleUpdate?(traitCollection.userInterfaceStyle)
+		swizzled_traitCollectionDidChange(previousTraitCollection)
+	}
+	
+	/// Since `UIKit` does not provide a logical way to be notified when `UIUserInterfaceStyle` changes, We had to swizzle
+	/// `traitCollectionDidChange(_:)` method to become aware of `UIUserInterfaceStyle` change. ¯\_(ツ)_/¯
+	fileprivate static let traitCollectionDidChangeSwizzler: Void = {
+		swizzleMethods(original: #selector(traitCollectionDidChange(_:)),
+					   swizzled: #selector(swizzled_traitCollectionDidChange(_:)))
+	}()
 }
