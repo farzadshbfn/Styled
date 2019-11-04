@@ -88,7 +88,7 @@ public struct Image: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// 	Image.profile.renderingMode(.alwaysTemplate)
 	/// 	// description: "profile(alwaysTemplate)"
 	/// 	Image("profile", bundle: .main)
-	/// 	// description: "{profile(com.farzadshbfn.styled)}"
+	/// 	// description: "{profile(bundle:com.farzadshbfn.styled)}"
 	///
 	public var description: String { resolver.description }
 	
@@ -155,6 +155,15 @@ extension Image: Item {
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 	
+}
+
+/// Hiding `Image` information on reflectoin
+extension Image: CustomReflectable {
+	public var customMirror: Mirror { .init(self, children: []) }
+}
+
+extension Image {
+	
 	/// Will return the backed `Image` with given `renderingMode`
 	///
 	/// - Parameter renderingMode: `UIImage.RenderingMode`
@@ -197,7 +206,8 @@ public protocol ImageScheme {
 	/// - Important: **Do not** call this method directly. use `UIImage.styled(_:)` instead.
 	///
 	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `image`
-	///
+	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
+	/// will receive `nil` is `UIImage`
 	/// - Note: It's guaranteed all `Image`s sent to this message, will contain field `name`
 	///
 	/// Sample for `DarkImageScheme`:
@@ -226,7 +236,7 @@ public struct DefaultImageScheme: ImageScheme {
 	
 	public init() { }
 	
-	public func image(for image: Image) -> UIImage? { .named(image.description, in: nil) }
+	public func image(for image: Image) -> UIImage? { .named(image.name!, in: nil) }
 }
 
 extension Image {
@@ -240,7 +250,7 @@ extension Image {
 	/// - Parameter bundle: `Bundle` to look into it's Assets
 	/// - SeeAlso: `XcodeAssetsImageScheme`
 	public init(_ name: String, bundle: Bundle) {
-		resolver = .lazy(.init(name: "\(name)(\(bundle.bundleIdentifier ?? "bundle.not.found"))") {
+		resolver = .lazy(.init(name: "\(name)(bundle:\(bundle.bundleIdentifier ?? ""))") {
 			$0.image(for: .init(name)) ?? UIImage.named(name, in: bundle)
 			})
 	}

@@ -169,6 +169,11 @@ extension Font: Item {
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
 }
 
+/// Hiding `Font` information on reflectoin
+extension Font: CustomReflectable {
+	public var customMirror: Mirror { .init(self, children: []) }
+}
+
 // MARK:- FontScheme
 /// Use this protocol to provide `UIFont` for `Styled`
 ///
@@ -190,8 +195,9 @@ public protocol FontScheme {
 	///
 	/// - Important: **Do not** call this method directly. use `UIFont.styled(_:)` instead.
 	///
-	/// - Note: Unlike `ColorScheme` & `FontScheme` its good to return a `UIFont` with given `size` and `weight`
-	///
+	/// - Note: Unlike `FontScheme` & `FontScheme` its good to return a `UIFont` with given `size` and `weight`
+	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
+	/// will receive `nil` is `UIFont`
 	/// - Note: It's guaranteed all `Font`s sent to this message, will contain field `font`
 	///
 	/// Sample for `LatinoFontScheme`:

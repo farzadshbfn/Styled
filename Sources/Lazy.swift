@@ -21,17 +21,9 @@ struct Lazy<Item>: Hashable, CustomStringConvertible where Item: Styled.Item {
 	/// Provides `Item.Result` which can be backed by `Item` or static `Item.Result`
 	let item: (_ scheme: Item.Scheme) -> Item.Result?
 	
-	/// Used internally to pre-calculate hashValue of Internal `item`
-	static func hashed<H: Hashable>(_ category: String, _ value: H) -> Int {
-		var hasher = Hasher()
-		hasher.combine(category)
-		value.hash(into: &hasher)
-		return hasher.finalize()
-	}
-	
 	/// Will load `Item.Result` from `Item.Scheme` when needed
 	init(_ item: Item) {
-		itemHashValue = Self.hashed("Item", item)
+		itemHashValue = item.hashValueCombined(with: "Item")
 		itemDescription = item.description
 		self.item = item.resolve
 	}
@@ -39,7 +31,7 @@ struct Lazy<Item>: Hashable, CustomStringConvertible where Item: Styled.Item {
 	/// Will use custom provider to provide `Item.Result` when needed
 	/// - Parameter name: Will be used as `description` and inside hash-algorithms
 	init(name: String, _ itemProvider: @escaping (_ scheme: Item.Scheme) -> Item.Result?) {
-		itemHashValue = Self.hashed("ItemProvider", name)
+		itemHashValue = name.hashValueCombined(with: "ItemProvider")
 		itemDescription = name
 		item = itemProvider
 	}

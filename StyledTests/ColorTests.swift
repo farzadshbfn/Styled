@@ -100,9 +100,9 @@ class ColorTests: XCTestCase {
 		expect(Color.transforming(.primary, named: "custom") { $0 }.description) == "{primary->custom}"
 		
 		if #available(iOS 11, *) {
-			expect(Color("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
+			expect(Color("bundled", bundle: .main).description) == "{bundled(bundle:com.farzadshbfn.styled)}"
 			
-			expect(Color("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
+			expect(Color("bundled", bundle: .init()).description) == "{bundled(bundle:)}"
 		}
 	}
 	

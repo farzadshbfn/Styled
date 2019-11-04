@@ -105,8 +105,8 @@ class ImageTests: XCTestCase {
 		expect(Image.profileFill.transform { $0 }.description) == "{profile.fill->t}"
 		expect(Image.profile.transform(named: "custom") { $0 }.description) == "{profile->custom}"
 		
-		expect(Image("bundled", bundle: .main).description) == "{bundled(com.farzadshbfn.styled)}"
-		expect(Image("bundled", bundle: .init()).description) == "{bundled(bundle.not.found)}"
+		expect(Image("bundled", bundle: .main).description) == "{bundled(bundle:com.farzadshbfn.styled)}"
+		expect(Image("bundled", bundle: .init()).description) == "{bundled(bundle:)}"
 	}
 	
 	func testLoad() {
