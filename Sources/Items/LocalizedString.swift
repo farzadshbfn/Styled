@@ -357,7 +357,7 @@ extension String {
 	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle = .main, useKeyAsValue: Bool, table: String?) -> String? {
 		guard let key = localizedString.key, let args = localizedString.arguments else { return nil }
 		/// Point here is to have `notFound` as always not equal to `key`
-		let notFound = key != "Not Found 1" ? "Not Found 1" : "Not Found 2"
+		let notFound = key != "<~@#*#@~>" ? "<~@#*#@~>" : ">~@#*#@~<"
 		let format = bundle.localizedString(
 			forKey: key,
 			value: useKeyAsValue ? key : notFound,
