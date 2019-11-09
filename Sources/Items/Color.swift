@@ -261,7 +261,7 @@ public protocol ColorScheme {
 	///
 	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `color`
 	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
-	/// will receive `nil` is `UIColor`
+	/// will receive `nil` as `UIColor`
 	/// - Note: It's guaranteed all `Color`s sent to this message, will contain field `name`
 	///
 	/// Sample for `DarkColorScheme`:
@@ -280,22 +280,22 @@ public protocol ColorScheme {
 	func color(for color: Color) -> UIColor?
 }
 
-/// Will fetch `Color`s from Assets Catalog
-///
-/// - Note: if `Color.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
-/// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
-/// Will return `nil` if nothing were found.
-///
-/// - SeeAlso: Color(_:bundle:)
-@available(iOS 11, *)
-public struct DefaultColorScheme: ColorScheme {
-	
-	public init() { }
-	
-	public func color(for color: Color) -> UIColor? { .named(color.name!, in: nil) }
-}
-
 extension Color {
+	
+	/// Will fetch `Color`s from Assets Catalog
+	///
+	/// - Note: if `Color.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
+	/// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
+	/// Will return `nil` if nothing were found.
+	///
+	/// - SeeAlso: Color(_:bundle:)
+	@available(iOS 11, *)
+	public struct DefaultScheme: ColorScheme {
+		
+		public init() { }
+		
+		public func color(for color: Color) -> UIColor? { .named(color.name!, in: nil) }
+	}
 	
 	/// Fetches `UIColor` from ColorAsset defined in given `Bundle`
 	///

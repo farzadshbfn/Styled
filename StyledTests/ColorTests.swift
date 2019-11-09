@@ -149,7 +149,7 @@ class ColorTests: XCTestCase {
 	
 	func testAssetsCatalog() {
 		if #available(iOS 11, *) {
-			Config.colorScheme = DefaultColorScheme()
+			Config.colorScheme = Color.DefaultScheme()
 			
 			expect(UIColor.styled("red.primary")) == .red
 			// lvl1 does not exist. should match to `red.primary`

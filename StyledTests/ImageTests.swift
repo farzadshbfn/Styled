@@ -147,7 +147,7 @@ class ImageTests: XCTestCase {
 	}
 	
 	func testAssetsCatalog() {
-		Config.imageScheme = DefaultImageScheme()
+		Config.imageScheme = Image.DefaultScheme()
 		Image.isPrefixMatchingEnabled = false
 		
 		expect(UIImage.styled(.profile)) == #imageLiteral(resourceName: "profile")

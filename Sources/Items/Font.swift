@@ -179,7 +179,7 @@ public protocol FontScheme {
 	/// - Note: You can read `UIApplication.shared.preferredContentSizeCategory` to return fonts with suitable size for accessibility
 	/// - Note: Unlike `FontScheme` & `FontScheme` its good to return a `UIFont` with given `size` and `weight`
 	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
-	/// will receive `nil` is `UIFont`
+	/// will receive `nil` as `UIFont`
 	/// - Note: It's guaranteed all `Font`s sent to this message, will contain field `font`
 	///
 	/// Sample for `LatinoFontScheme`:
@@ -198,19 +198,22 @@ public protocol FontScheme {
 	func font(for font: Font) -> UIFont?
 }
 
-/// Will fetch `Font`s from system font size category
-public struct DefaultFontScheme: FontScheme {
+extension Font {
 	
-	public init() { }
-	
-	public func font(for font: Font) -> UIFont? {
-		.systemFont(ofSize: size(for: font.size!), weight: font.weight!)
-	}
+	/// Will fetch `Font`s from system font size category
+	public struct DefaultScheme: FontScheme {
+		
+		public init() { }
+		
+		public func font(for font: Font) -> UIFont? {
+			.systemFont(ofSize: size(for: font.size!), weight: font.weight!)
+		}
 
-	public func size(for size: Font.Size) -> CGFloat {
-		switch size {
-		case .static(let size): return size
-		case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize
+		public func size(for size: Font.Size) -> CGFloat {
+			switch size {
+			case .static(let size): return size
+			case .dynamic(let textStyle): return UIFont.preferredFont(forTextStyle: textStyle).pointSize
+			}
 		}
 	}
 }

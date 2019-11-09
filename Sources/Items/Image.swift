@@ -196,7 +196,7 @@ public protocol ImageScheme {
 	///
 	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `image`
 	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
-	/// will receive `nil` is `UIImage`
+	/// will receive `nil` as `UIImage`
 	/// - Note: It's guaranteed all `Image`s sent to this message, will contain field `name`
 	///
 	/// Sample for `DarkImageScheme`:
@@ -215,20 +215,20 @@ public protocol ImageScheme {
 	func image(for image: Image) -> UIImage?
 }
 
-/// Will fetch `Image`s from Assets Catalog
-///
-/// - Note: `Image.isPrefixMatchingEnabled` does not affect `DefaultImageScheme` since
-/// Assets Catalog  uses prefixMatching for loading `UIImage`
-///
-/// - SeeAlso: Image(_:bundle:)
-public struct DefaultImageScheme: ImageScheme {
-	
-	public init() { }
-	
-	public func image(for image: Image) -> UIImage? { .named(image.name!, in: nil) }
-}
-
 extension Image {
+	
+	/// Will fetch `Image`s from Assets Catalog
+	///
+	/// - Note: `Image.isPrefixMatchingEnabled` does not affect `Image.DefaultScheme` since
+	/// Assets Catalog  uses prefixMatching for loading `UIImage`
+	///
+	/// - SeeAlso: Image(_:bundle:)
+	public struct DefaultScheme: ImageScheme {
+		
+		public init() { }
+		
+		public func image(for image: Image) -> UIImage? { .named(image.name!, in: nil) }
+	}
 	
 	/// Fetches `UIImage` from ImageAsset defined in given `Bundle`
 	///

@@ -267,41 +267,47 @@ public protocol LocalizedStringScheme {
 	
 	/// `StyleDescriptor` will use this method to fetch localized `String`
 	///
-	/// - Important: **Do not** call this method directly. use `UIColor.styled(_:)` instead.
+	/// - Important: **Do not** call this method directly. use `String.styled(_:)` instead.
 	///
-	/// - Note: It's a good practice to let the application crash if the scheme doesn't responde to given `color`
 	/// - Note: Returning `nil` translates to **not supported** by this scheme. Returning `nil` will not guarantee that the associated object
-	/// will receive `nil` is `UIColor`
-	/// - Note: It's guaranteed all `Color`s sent to this message, will contain field `name`
+	/// will receive `nil` as `UIColor`
+	/// - Note: It's guaranteed all `String`s sent to this message, will contain fields `key` and `arguments`
 	///
-	/// Sample for `DarkColorScheme`:
+	/// Sample for `SpanishLocalizedStringScheme`:
 	///
-	/// 	struct DarkColorScheme: ColorScheme {
-	/// 	    func color(for color: Color) -> UIColor? {
-	/// 	        switch color {
-	/// 	        case .primary1: // return primary level1 color
-	/// 	        case .primary2: // return primary level2 color
-	/// 	        default: fatalError("Forgot to support \(color)")
-	/// 	        }
-	/// 	    }
-	/// 	}
+	///  	struct SpanishLocalizedStringScheme: LocalizedStringScheme {
+	///  	    func string(for localizedString: LocalizedString) -> String? {
+	///  	        // Fetch `localizedString.key!` from a known resource and format with `localizedStirng.arguments!`
 	///
-	/// - Parameter color: `Color` type to fetch `UIColor` from current scheme
+	///  	        // We can also manage plural localization by identifying the `localizedString.key!` and reordering
+	///  	        /// `localizedString.arguments` in a way that is needed in plural localization
+	///  	    }
+	///  	}
+	///
+	/// - Parameter localizedString: `LocalizedString` type to fetch `String` from current scheme
 	func string(for localizedString: LocalizedString) -> String?
 }
 
-/// Will fetch `String`s from **Localizable.strings** and **Localizable.stringsdict** files
-/// - SeeAlso: LocalizedString(_:bundle:table:)
-public struct DefaultLocalizedStringScheme: LocalizedStringScheme {
-	
-	public init() { }
-	
-	public func string(for localizedString: LocalizedString) -> String? {
-		.localized(localizedString, in: .main, table: nil)
-	}
-}
-
 extension LocalizedString {
+	
+	/// Will fetch `String`s from **Localizable.strings** and **Localizable.stringsdict** files
+	/// - SeeAlso: LocalizedString(_:bundle:table:)
+	public struct DefaultScheme: LocalizedStringScheme {
+		
+		/// This flag controls wether return `String` should be mirrored to generated `key` or not
+		///
+		/// - Note: If you're using `.init(_:bundle:)` version of `LocalizedString`, This flag should be set to false in-order to make that work
+		public var useKeyAsValue: Bool
+		
+		public init(useKeyAsValue: Bool = true) {
+			self.useKeyAsValue = useKeyAsValue
+		}
+		
+		public func string(for localizedString: LocalizedString) -> String? {
+			.localized(localizedString, in: .main, useKeyAsValue: useKeyAsValue, table: nil)
+		}
+	}
+
 	
 	/// Initializes a LocalizedString which will look in the Bundle for **.strings** and **.stringdict**
 	///
@@ -310,11 +316,12 @@ extension LocalizedString {
 	///
 	/// - Parameter localizedString: `LocalizedString` to look-up
 	/// - Parameter bundle: `Bundle` to search for localizable files in
+	/// - Parameter useKeyAsValue: If `true`, will send `value` to localization method to be used in `key`'s place if key look-up was not successful
 	/// - Parameter table: Name of **.strings** and **.stringsdict** files. If `nil` is provided,
 	/// will look into **Localizable.strings** and **Localizable.stringsdict**
-	public init(_ localizedString: LocalizedString, bundle: Bundle, table: String? = nil) {
+	public init(_ localizedString: LocalizedString, bundle: Bundle, useKeyAsValue: Bool = true, table: String? = nil) {
 		resolver = .lazy(.init(name: "\(localizedString)(bundle:\(bundle.bundleIdentifier ?? ""))") {
-			$0.string(for: localizedString) ?? String.localized(localizedString, in: bundle, table: table)
+			$0.string(for: localizedString) ?? String.localized(localizedString, in: bundle, useKeyAsValue: useKeyAsValue, table: table)
 		})
 	}
 }
@@ -332,13 +339,14 @@ extension String {
 	/// Will look in the Bundle for **.strings** and **.stringdict**
 	/// - Parameter localizedString: `LocalizedString` to look-up
 	/// - Parameter bundle: `Bundle` to search for localizable files in
+	/// - Parameter useKeyAsValue: If `true`, will send `value` to localization method to be used in `key`'s place if key look-up was not successful
 	/// - Parameter table: Name of **.strings** and **.stringsdict** files. If `nil` is provided,
 	/// will look into **Localizable.strings** and **Localizable.stringsdict**
-	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle?, table: String?) -> String? {
+	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle?, useKeyAsValue: Bool, table: String?) -> String? {
 		guard let key = localizedString.key, let args = localizedString.arguments else { return nil }
 		let bundle = bundle ?? .main
 		return .init(
-			format: bundle.localizedString(forKey: key, value: key, table: table),
+			format: bundle.localizedString(forKey: key, value: useKeyAsValue ? key : nil, table: table),
 			arguments: args
 		)
 	}

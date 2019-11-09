@@ -21,7 +21,7 @@ public final class Config {
 	/// Returns `UIColor.StyledAssetCatalog` for iOS11 and later.
 	private static let initialColorScheme: ColorScheme? = {
 		if #available(iOS 11, *) {
-			return DefaultColorScheme()
+			return Color.DefaultScheme()
 		}
 		return nil
 	}()
@@ -43,7 +43,7 @@ public final class Config {
 	///
 	/// Setting this property will trigger `colorSchemeNeedsUpdate` notification
 	///
-	/// - Note: For iOS 11+ default value is `DefaultColorScheme` and `nil` otherwise
+	/// - Note: For iOS 11+ default value is `Color.DefaultScheme` and `nil` otherwise
 	public static var colorScheme: ColorScheme! = initialColorScheme {
 		didSet { NotificationCenter.default.post(name: colorSchemeNeedsUpdate, object: nil) }
 	}
@@ -52,8 +52,8 @@ public final class Config {
 	///
 	/// Setting this property will trigger `imageSchemeNeedsUpdate` notification
 	///
-	/// - Note: Default value is `DefaultImageScheme`
-	public static var imageScheme: ImageScheme! = DefaultImageScheme() {
+	/// - Note: Default value is `Image.DefaultScheme`
+	public static var imageScheme: ImageScheme! = Image.DefaultScheme() {
 		didSet { NotificationCenter.default.post(name: imageSchemeNeedsUpdate, object: nil) }
 	}
 	
@@ -61,8 +61,8 @@ public final class Config {
 	///
 	/// Setting this property will trigger `fontSchemeNeedsUpdate` notification
 	///
-	/// - Note: Default value is `DefaultFontScheme`
-	public static var fontScheme: FontScheme! = DefaultFontScheme() {
+	/// - Note: Default value is `Font.DefaultScheme`
+	public static var fontScheme: FontScheme! = Font.DefaultScheme() {
 		didSet { NotificationCenter.default.post(name: fontSchemeNeedsUpdate, object: nil) }
 	}
 	
@@ -70,8 +70,8 @@ public final class Config {
 	///
 	/// Setting this property will trigger `localizedStringSchemeNeedsUpdate` notification
 	///
-	/// - Note: Default value is `DefaultLocalizedStringScheme`
-	public static var localizedStringScheme: LocalizedStringScheme! = DefaultLocalizedStringScheme() {
+	/// - Note: Default value is `LocalizedString.DefaultScheme`
+	public static var localizedStringScheme: LocalizedStringScheme! = LocalizedString.DefaultScheme() {
 		didSet { NotificationCenter.default.post(name: localizedStringSchemeNeedsUpdate, object: nil) }
 	}
 }
