@@ -356,8 +356,7 @@ extension String {
 	/// - Returns: `nil` If `useKeyAsValue` is `false` and `localizedString.key` was not found in provided `table`
 	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle = .main, useKeyAsValue: Bool, table: String?) -> String? {
 		guard let key = localizedString.key, let args = localizedString.arguments else { return nil }
-		/// Point here is to have `notFound` as always not equal to `key`
-		let notFound = key != "<~@#*#@~>" ? "<~@#*#@~>" : ">~@#*#@~<"
+		let notFound = "◀︎N■F▶︎"
 		let format = bundle.localizedString(
 			forKey: key,
 			value: useKeyAsValue ? key : notFound,
