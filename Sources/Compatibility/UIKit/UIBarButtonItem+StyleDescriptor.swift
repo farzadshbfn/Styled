@@ -15,7 +15,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter style: `UIBarButtonItem.Style`
 	/// - Parameter barMetrics: `UIBarMetrics`
-	func setBackgroundImage(_ image: Image?, for state: UIControl.State, style: UIBarButtonItem.Style, barMetrics: UIBarMetrics) {
+	public func setBackgroundImage(_ image: Image?, for state: UIControl.State, style: UIBarButtonItem.Style, barMetrics: UIBarMetrics) {
 		onImageSchemeUpdate(
 			withId: #function,
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: state, style: style, barMetrics: barMetrics) } }
@@ -26,7 +26,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter barMetrics: `UIBarMetrics`
-	func setBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {
+	public func setBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {
 		onImageSchemeUpdate(
 			withId: #function,
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: state, barMetrics: barMetrics) } }
@@ -37,7 +37,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
 	/// - Parameter barMetrics: `UIBarMetrics`
-	func setBackButtonBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {
+	public func setBackButtonBackgroundImage(_ image: Image?, for state: UIControl.State, barMetrics: UIBarMetrics) {
 		onImageSchemeUpdate(
 			withId: #function,
 			do: image.map { img in { $0.setBackButtonBackgroundImage(.styled(img), for: state, barMetrics: barMetrics) } }

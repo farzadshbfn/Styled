@@ -14,7 +14,7 @@ extension StyleDescriptor where Base: UINavigationBar {
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter position: `UIBarPosition`
 	/// - Parameter barMetrics: `UIBarMetrics`
-	func setBackgroundImage(_ image: Image?, for position: UIBarPosition, barMetrics: UIBarMetrics) {
+	public func setBackgroundImage(_ image: Image?, for position: UIBarPosition, barMetrics: UIBarMetrics) {
 		onImageSchemeUpdate(
 			withId: #function,
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: position, barMetrics: barMetrics) } }
@@ -24,7 +24,7 @@ extension StyleDescriptor where Base: UINavigationBar {
 	/// Wrapper for `setBackgroundImage(_:for:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter barMetrics: `UIBarMetrics`
-	func setBackgroundImage(_ image: Image?, for barMetrics: UIBarMetrics) {
+	public func setBackgroundImage(_ image: Image?, for barMetrics: UIBarMetrics) {
 		onImageSchemeUpdate(
 			withId: #function,
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: barMetrics) } }
