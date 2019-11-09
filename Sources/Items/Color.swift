@@ -288,6 +288,7 @@ extension Color {
 	/// will look for `a.b.c` and if `a.b.c` is failed to be loaded, will look for `a.b` and so on.
 	/// Will return `nil` if nothing were found.
 	///
+	/// - SeeAlso: NoScheme
 	/// - SeeAlso: Color(_:bundle:)
 	@available(iOS 11, *)
 	public struct DefaultScheme: ColorScheme {
@@ -295,6 +296,17 @@ extension Color {
 		public init() { }
 		
 		public func color(for color: Color) -> UIColor? { .named(color.name!, in: nil) }
+	}
+	
+	/// Will return `nil` for all `Color`s
+	///
+	/// - Important: It's recommended to use `NoScheme` when using `.init(_:bundle:)` version of `Color`
+	@available(iOS 11, *)
+	public struct NoScheme: ColorScheme {
+		
+		public init() { }
+		
+		public func color(for color: Color) -> UIColor? { nil }
 	}
 	
 	/// Fetches `UIColor` from ColorAsset defined in given `Bundle`

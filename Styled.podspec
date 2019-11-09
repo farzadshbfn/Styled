@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   s.name             = 'Styled'
   s.module_name      = 'Styled'
-  s.version          = '0.6.2'
+  s.version          = '0.6.3'
   s.summary          = 'Elegant Style(Color,Font,Image,...) management in Swift'
   s.homepage         = 'https://github.com/farzadshbfn/Styled'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }

@@ -291,7 +291,8 @@ public protocol LocalizedStringScheme {
 extension LocalizedString {
 	
 	/// Will fetch `String`s from **Localizable.strings** and **Localizable.stringsdict** files
-	/// - SeeAlso: LocalizedString(_:bundle:table:)
+	/// - SeeAlso: NoScheme
+	/// - SeeAlso: LocalizedString(_:bundle:useKeyAsValue:table)
 	public struct DefaultScheme: LocalizedStringScheme {
 		
 		/// This flag controls wether return `String` should be mirrored to generated `key` or not
@@ -306,6 +307,16 @@ extension LocalizedString {
 		public func string(for localizedString: LocalizedString) -> String? {
 			.localized(localizedString, in: .main, useKeyAsValue: useKeyAsValue, table: nil)
 		}
+	}
+	
+	/// Will return `nil` for all `LocalizedString`s
+	///
+	/// - Important: It's recommended to use `NoScheme` when using `.init(_:bundle:useKeyAsValue:table)` version of `LocalizedString`
+	public struct NoScheme: LocalizedStringScheme {
+		
+		public init() { }
+		
+		public func string(for localizedString: LocalizedString) -> String? { nil }
 	}
 
 	
@@ -338,16 +349,20 @@ extension String {
 	
 	/// Will look in the Bundle for **.strings** and **.stringdict**
 	/// - Parameter localizedString: `LocalizedString` to look-up
-	/// - Parameter bundle: `Bundle` to search for localizable files in
+	/// - Parameter bundle: `Bundle` to search for localizable files in (default is `.main`)
 	/// - Parameter useKeyAsValue: If `true`, will send `value` to localization method to be used in `key`'s place if key look-up was not successful
 	/// - Parameter table: Name of **.strings** and **.stringsdict** files. If `nil` is provided,
 	/// will look into **Localizable.strings** and **Localizable.stringsdict**
-	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle?, useKeyAsValue: Bool, table: String?) -> String? {
+	/// - Returns: `nil` If `useKeyAsValue` is `false` and `localizedString.key` was not found in provided `table`
+	fileprivate static func localized(_ localizedString: LocalizedString, in bundle: Bundle = .main, useKeyAsValue: Bool, table: String?) -> String? {
 		guard let key = localizedString.key, let args = localizedString.arguments else { return nil }
-		let bundle = bundle ?? .main
-		return .init(
-			format: bundle.localizedString(forKey: key, value: useKeyAsValue ? key : nil, table: table),
-			arguments: args
+		/// Point here is to have `notFound` as always not equal to `key`
+		let notFound = key != "Not Found 1" ? "Not Found 1" : "Not Found 2"
+		let format = bundle.localizedString(
+			forKey: key,
+			value: useKeyAsValue ? key : notFound,
+			table: table
 		)
+		return format != notFound ? .init(format: format, arguments: args ) : nil
 	}
 }

@@ -222,12 +222,23 @@ extension Image {
 	/// - Note: `Image.isPrefixMatchingEnabled` does not affect `Image.DefaultScheme` since
 	/// Assets Catalog  uses prefixMatching for loading `UIImage`
 	///
+	/// - SeeAlso: NoScheme
 	/// - SeeAlso: Image(_:bundle:)
 	public struct DefaultScheme: ImageScheme {
 		
 		public init() { }
 		
 		public func image(for image: Image) -> UIImage? { .named(image.name!, in: nil) }
+	}
+	
+	/// Will return `nil` for all `Image`s
+	///
+	/// - Important: It's recommended to use `NoScheme` when using `.init(_:bundle:)` version of `Image`
+	public struct NoScheme: ImageScheme {
+		
+		public init() { }
+		
+		public func image(for image: Image) -> UIImage? { nil }
 	}
 	
 	/// Fetches `UIImage` from ImageAsset defined in given `Bundle`
