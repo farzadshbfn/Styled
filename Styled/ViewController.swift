@@ -9,21 +9,7 @@
 import UIKit
 import Styled
 
-class ColorView: UIView {
-	@IBOutlet var label: UILabel!
-	
-	override func awakeFromNib() {
-		super.awakeFromNib()
-		
-		label.sd.font = .init(size: .dynamic(.body), weight: .ultraLight)
-	}
-	
-	func assign(color: Color) {
-		sd.backgroundColor = color
-		label.sd.textColor = .blending(.label, with: color)
-	}
-}
-
+// MARK:- ViewController
 class ViewController: UIViewController {
 	
 	@IBOutlet var titleLabel: UILabel!
@@ -44,7 +30,7 @@ class ViewController: UIViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		// Just apply colors/fonts/images once, and they'll keep in sync 👍🏼
+		// Just apply colors/fonts/images once, and they will be kept in sync 👍🏼
 		
 		view.sd.backgroundColor = .background
 		view.sd.tintColor = .accent
@@ -54,11 +40,11 @@ class ViewController: UIViewController {
 		// first section
 		titleLabel.sd.text = "Font/Localization management";
 		titleLabel.sd.textColor = .label
-		titleLabel.sd.font = .init(size: .dynamic(.body), weight: .light)
+		titleLabel.sd.font = .body(weight: .light)
 		
 		headlineLabel.sd.text = "Headline of the page"
 		headlineLabel.sd.textColor = .label
-		headlineLabel.sd.font = .init(size: .dynamic(.headline), weight: .bold)
+		headlineLabel.sd.font = .headline
 		
 		subtitleLabel.sd.text = "Subheadline of the page"
 		subtitleLabel.sd.textColor = .secondaryLabel
@@ -67,7 +53,7 @@ class ViewController: UIViewController {
 		// second section
 		colorsTitleLabel.sd.text = "Colors"
 		colorsTitleLabel.sd.textColor = .label
-		colorsTitleLabel.sd.font = .init(size: .dynamic(.body), weight: .light)
+		colorsTitleLabel.sd.font = .body(weight: .light)
 		
 		redView.assign(color: .red)
 		greenView.assign(color: .green)
@@ -77,10 +63,26 @@ class ViewController: UIViewController {
 		// third section
 		imageTitleLabel.sd.text = "Image"
 		imageTitleLabel.sd.textColor = .label
-		imageTitleLabel.sd.font = .init(size: .dynamic(.body), weight: .light)
+		imageTitleLabel.sd.font = .body(weight: .light)
 		
 		profileButton.sd.setImage(.profile, for: .normal)
 		profileButton.sd.setImage(.profileFill, for: .highlighted)
+	}
+}
+
+// MARK:- ColorView
+class ColorView: UIView {
+	@IBOutlet var label: UILabel!
+	
+	override func awakeFromNib() {
+		super.awakeFromNib()
+		
+		label.sd.font = .body(weight: .ultraLight)
+	}
+	
+	func assign(color: Color) {
+		sd.backgroundColor = color
+		label.sd.textColor = .blending(.label, with: color)
 	}
 }
 

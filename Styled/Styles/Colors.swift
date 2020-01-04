@@ -9,8 +9,15 @@
 import Foundation
 import Styled
 
-
+/// - Note: How to define Color variables to make sense throughout all different
+/// `ColorScheme`s is a time consuming task and highly dependant on the product
+/// your application will resemble. But for simplicity, we'll follow the same
+/// naming convention `UIKit` used for defining color variables
 extension Color {
+	
+	/// Primary color of the brand or application
+	/// Mostly the color that is used essentially inside the application
+	/// and is likely tied to tintColor
 	static let accent: Self = "accent"
 	
 	// MARK: Labels

@@ -31,6 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			Styled.Config.colorScheme = Color.LightScheme()
 		}
 		
+		// Make sure to check Colors.swift, Images.swift, Font.swift
+		
 		return true
 	}
 }
