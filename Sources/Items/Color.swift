@@ -301,7 +301,6 @@ extension Color {
 	/// Will return `nil` for all `Color`s
 	///
 	/// - Important: It's recommended to use `NoScheme` when using `.init(_:bundle:)` version of `Color`
-	@available(iOS 11, *)
 	public struct NoScheme: ColorScheme {
 		
 		public init() { }

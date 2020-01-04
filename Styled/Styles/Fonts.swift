@@ -25,4 +25,7 @@ extension Font {
 	static func body(weight: Weight = .regular) -> Font {
 		.init(size: .dynamic(.body), weight: weight)
 	}
+	
+	
+	static let button: Self = .init(size: .dynamic(.caption1), weight: .black)
 }

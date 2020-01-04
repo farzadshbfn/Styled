@@ -12,4 +12,5 @@ import Styled
 extension Image {
 	static let profile: Self = "profile"
 	static let profileFill: Self = "profile.fill"
+	static let profileMulti: Self = "profile.multi"
 }

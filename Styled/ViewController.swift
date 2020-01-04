@@ -12,6 +12,8 @@ import Styled
 // MARK:- ViewController
 class ViewController: UIViewController {
 	
+	@IBOutlet var barButtonItem: UIBarButtonItem!
+	
 	@IBOutlet var titleLabel: UILabel!
 	@IBOutlet var headlineLabel: UILabel!
 	@IBOutlet var subtitleLabel: UILabel!
@@ -26,6 +28,13 @@ class ViewController: UIViewController {
 	
 	@IBOutlet var imageTitleLabel: UILabel!
 	@IBOutlet var profileButton: UIButton!
+	
+	override var navigationItem: UINavigationItem {
+		let item = super.navigationItem
+		item.title = "Styled"
+		item.rightBarButtonItem?.sd.image = .profileMulti
+		return item
+	}
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -35,10 +44,15 @@ class ViewController: UIViewController {
 		view.sd.backgroundColor = .background
 		view.sd.tintColor = .accent
 		
-		separatorViews.forEach { $0.sd.backgroundColor = .gray }
+		configureFirstSection()
+		configureSecondSection()
+		configureThirdSection()
 		
-		// first section
-		titleLabel.sd.text = "Font/Localization management";
+		separatorViews.forEach { $0.sd.backgroundColor = .gray }
+	}
+	
+	private func configureFirstSection() {
+		titleLabel.sd.text = "Font/Localization";
 		titleLabel.sd.textColor = .label
 		titleLabel.sd.font = .body(weight: .light)
 		
@@ -49,9 +63,10 @@ class ViewController: UIViewController {
 		subtitleLabel.sd.text = "Subheadline of the page"
 		subtitleLabel.sd.textColor = .secondaryLabel
 		subtitleLabel.sd.font = .init(size: .dynamic(.subheadline))
-		
-		// second section
-		colorsTitleLabel.sd.text = "Colors"
+	}
+	
+	private func configureSecondSection() {
+		colorsTitleLabel.sd.text = "Colors \(4)"
 		colorsTitleLabel.sd.textColor = .label
 		colorsTitleLabel.sd.font = .body(weight: .light)
 		
@@ -59,12 +74,16 @@ class ViewController: UIViewController {
 		greenView.assign(color: .green)
 		blueView.assign(color: .blue)
 		goldView.assign(color: .gold)
-		
-		// third section
+	}
+	
+	private func configureThirdSection() {
 		imageTitleLabel.sd.text = "Image"
 		imageTitleLabel.sd.textColor = .label
 		imageTitleLabel.sd.font = .body(weight: .light)
 		
+		profileButton.titleLabel?.sd.font = .button
+		
+		profileButton.sd.setTitle("Touch and hold", for: .normal)
 		profileButton.sd.setImage(.profile, for: .normal)
 		profileButton.sd.setImage(.profileFill, for: .highlighted)
 	}

@@ -115,7 +115,7 @@ extension StyleDescriptor {
 		guard let color = color else { return nil }
 		let styledUpdate = ColorConfig.Update(color) { [weak base] scheme in
 			guard let base = base else { return () }
-			return apply(base, color.resolve(from: scheme))
+			apply(base, color.resolve(from: scheme))
 		}
 		styledUpdate.synchronize(withScheme: self.color.scheme)
 		return styledUpdate

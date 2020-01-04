@@ -35,7 +35,7 @@ class ColorTests: XCTestCase {
 	}
 	
 	override func tearDown() {
-		Config.colorScheme = nil
+		Config.colorScheme = Color.NoScheme()
 	}
 	
 	func testName() {

@@ -34,7 +34,7 @@ class ImageTests: XCTestCase {
 	}
 
     override func tearDown() {
-		Config.imageScheme = nil
+		Config.imageScheme = Image.NoScheme()
 	}
 	
 	func testName() {

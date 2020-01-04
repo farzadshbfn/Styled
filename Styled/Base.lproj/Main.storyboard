@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14868" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14868" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="KuA-gj-agU">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
@@ -17,13 +17,13 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4qm-bG-o8h" userLabel="ContainerView">
-                                <rect key="frame" x="0.0" y="44" width="414" height="818"/>
+                                <rect key="frame" x="0.0" y="88" width="414" height="774"/>
                                 <subviews>
                                     <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hwE-FU-FLk">
-                                        <rect key="frame" x="0.0" y="0.0" width="414" height="818"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="414" height="774"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="XfL-Wb-0Ju">
-                                                <rect key="frame" x="16" y="32" width="382" height="367.5"/>
+                                                <rect key="frame" x="16" y="16" width="382" height="367.5"/>
                                                 <subviews>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VFX-mq-w0d">
                                                         <rect key="frame" x="0.0" y="0.0" width="382" height="100.5"/>
@@ -210,7 +210,7 @@
                                             <constraint firstAttribute="bottom" secondItem="XfL-Wb-0Ju" secondAttribute="bottom" constant="32" id="T6u-5A-2IN"/>
                                             <constraint firstAttribute="trailing" secondItem="XfL-Wb-0Ju" secondAttribute="trailing" constant="16" id="XRz-Ck-Zsa"/>
                                             <constraint firstItem="XfL-Wb-0Ju" firstAttribute="leading" secondItem="hwE-FU-FLk" secondAttribute="leading" constant="16" id="bEQ-E6-S6U"/>
-                                            <constraint firstItem="XfL-Wb-0Ju" firstAttribute="top" secondItem="hwE-FU-FLk" secondAttribute="top" constant="32" id="lcN-SY-YRc"/>
+                                            <constraint firstItem="XfL-Wb-0Ju" firstAttribute="top" secondItem="hwE-FU-FLk" secondAttribute="top" constant="16" id="lcN-SY-YRc"/>
                                         </constraints>
                                     </scrollView>
                                 </subviews>
@@ -233,7 +233,11 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <navigationItem key="navigationItem" id="s3y-52-fHg">
+                        <barButtonItem key="rightBarButtonItem" title="Item" id="O4Z-sg-rZ7"/>
+                    </navigationItem>
                     <connections>
+                        <outlet property="barButtonItem" destination="O4Z-sg-rZ7" id="pwz-cP-ydV"/>
                         <outlet property="blueView" destination="Xon-GY-RlZ" id="Jss-7b-TsS"/>
                         <outlet property="colorsTitleLabel" destination="5QY-fg-TFA" id="4iV-EX-jWP"/>
                         <outlet property="goldView" destination="tP7-WS-aEH" id="mmh-11-nBo"/>
@@ -245,9 +249,28 @@
                         <outlet property="subtitleLabel" destination="s7U-GT-aMF" id="MKI-CK-qZ5"/>
                         <outlet property="titleLabel" destination="nPJ-WD-Q8J" id="Nvq-k9-l0l"/>
                         <outletCollection property="separatorViews" destination="LSg-OQ-pVL" collectionClass="NSMutableArray" id="AtK-PQ-mjq"/>
+                        <outletCollection property="separatorViews" destination="mjq-7h-ikk" collectionClass="NSMutableArray" id="5UW-Tr-wdv"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1957.9710144927537" y="109.82142857142857"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="5sx-eb-C54">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="KuA-gj-agU" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="bgx-b1-Tan">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="5nu-YR-tYO"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="5Ur-q8-RGe" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1047.8260869565217" y="109.82142857142857"/>
         </scene>
