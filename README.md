@@ -114,7 +114,7 @@ extension Color {
 }
 ```
 
-And this is how you control the which `ColorScheme` the app should use:
+And this is how you control which `ColorScheme` the app should use:
 
 ```swift
 // You can manually control the ColorScheme
@@ -132,7 +132,7 @@ Styled.Config.onUserInterfaceStyleDidChange {
 Styled.Config.colorScheme = Color.DefaultScheme()
 ```
 
-And That's it! You can also take the same approach for defining `Image`s, `Font`s and `LocalizedString`s.
+And That's it! You can also take the same approach to define `Image`s, `Font`s and `LocalizedString`s.
 
 ### Fonts
 
