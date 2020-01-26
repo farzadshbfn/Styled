@@ -202,7 +202,7 @@ You can always add your personalized functionalities to the `LocalizedString.Str
 
 ## Author
 
-FarzadShbfn, farzad.shbfn@gmail.com
+[FarzadShbfn](https://twitter.com/FarzadShbfn), farzad.shbfn@gmail.com
 
 ## License
 
