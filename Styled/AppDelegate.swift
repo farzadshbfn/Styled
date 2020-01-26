@@ -19,10 +19,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		/// Configuring `Styled` to respect device's `UIContentSizeCategory` and update accessibility font sizes
 		Styled.Config.onContentSizeCategoryDidChange { _ in .update }
 		
-		/// Configuring `Styled` to respect device's `UIUserInterfaceStyle` and update application with 
+		/// Configuring `Styled` to respect device's `UIUserInterfaceStyle` and update application with
+		/// a suitable `ColorScheme`
 		if #available(iOS 12.0, *) {
-			Styled.Config.onUserInterfaceStyleDidChange { _ in .update }
+			Styled.Config.onUserInterfaceStyleDidChange {
+				switch $0 {
+				case .dark: return .replace(with: Color.DarkScheme())
+				default: return .replace(with: Color.LightScheme())
+				}
+			}
+			Styled.Config.colorScheme = Color.LightScheme()
 		}
+		
+		// Make sure to check Colors.swift, Images.swift, Font.swift
 		
 		return true
 	}

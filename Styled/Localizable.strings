@@ -6,4 +6,14 @@
   Copyright © 2019 FarzadShbfn. All rights reserved.
 */
 
-"Test" = "Test In Main";
+"Font/Localization" = "Font/Localization";
+
+"Headline of the page" = "Headline of the page that has the most importance!";
+
+"Subheadline of the page" = "Subheadline of the page that will most likely descibe what the headline is talking about and does not have the same importance as the headline";
+
+"Colors %@" = "Colors (%@ Views)";
+
+"Image" = "Image";
+
+"Touch and hold" = "Touch & Hold";

@@ -216,6 +216,14 @@ extension Font {
 			}
 		}
 	}
+	
+	/// Will return `nil` for all `Fonts`s
+	public struct NoScheme: FontScheme {
+		
+		public init() { }
+		
+		public func font(for font: Font) -> UIFont? { nil }
+	}
 }
 
 // MARK:- UIFont+Extensions

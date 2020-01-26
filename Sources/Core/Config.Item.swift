@@ -126,7 +126,9 @@ extension Config.Item {
 		
 		/// Will run inner closure to update object with `Item` and `Scheme`
 		/// - Parameter scheme: `Scheme` to update object with
-		func synchronize(withScheme scheme: Scheme) { synchronizer(scheme) }
+		func synchronize(withScheme scheme: Scheme) {
+			synchronizer(scheme)
+		}
 		
 		init(_ item: Item, _ synchronizer: @escaping (Scheme) -> Void) {
 			self.item = item
