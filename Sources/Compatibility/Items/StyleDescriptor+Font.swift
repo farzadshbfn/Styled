@@ -11,7 +11,7 @@ import Foundation
 private var associatedFontConfig: Int8 = 0
 
 extension StyleDescriptor {
-	
+
 	/// Cusotm `FontScheme` used for current Object.
 	///
 	/// - Note: Setting `nil` will make `Styled` listen to `Config.fontSchemeNeedsUpdate`
@@ -21,10 +21,10 @@ extension StyleDescriptor {
 		get { font.customScheme }
 		set { font.customScheme = newValue }
 	}
-	
+
 	/// Calling this method, will update all fonts associated with `styled`
 	public func synchronizeFonts() { font.synchronize() }
-	
+
 	/// Will get called when  `Config.fontSchemeNeedsUpdate` is raised or `synchronizeFonts()` is called or `customFontScheme` is set
 	///
 	/// - Note: Use this method in cases that a specific variable can not be set with `Font` but you need to be aware about it's changes. **Object** will
@@ -41,7 +41,7 @@ extension StyleDescriptor {
 		}
 		if shouldSet { update(base) }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
@@ -50,7 +50,7 @@ extension StyleDescriptor {
 		get { font.updates[keyPath]?.item }
 		set { font.updates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
@@ -59,13 +59,13 @@ extension StyleDescriptor {
 		get { font.updates[keyPath]?.item }
 		set { font.updates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
-	
+
 	private typealias FontConfig = Config.Item<Font>
-	
+
 	/// Holds Configurations done to Font instances inside `base`
 	private var font: FontConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
-		
+
 		guard let obj = objc_getAssociatedObject(base, &associatedFontConfig) as? FontConfig else {
 			let obj = FontConfig(notifName: Config.fontSchemeNeedsUpdate, defaultScheme: Config.fontScheme)
 			objc_setAssociatedObject(base, &associatedFontConfig, obj, .OBJC_ASSOCIATION_RETAIN)
@@ -73,7 +73,7 @@ extension StyleDescriptor {
 		}
 		return obj
 	}
-	
+
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ font: Font?, _ apply: @escaping (Base, UIFont?) -> Void) -> FontConfig.Update? {
 		guard let font = font else { return nil }

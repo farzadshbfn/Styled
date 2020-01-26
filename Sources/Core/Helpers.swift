@@ -8,7 +8,7 @@
 import Foundation
 
 extension Optional {
-	
+
 	/// Will write to `KeyPath` if self is `some`
 	/// - Parameter keyPath:`ReferenceWritableKeyPath`
 	/// - Parameter root: Root object to write to
@@ -19,7 +19,7 @@ extension Optional {
 }
 
 extension Hashable {
-	
+
 	/// Combines `self` with `other` using `Hasher` and returns finalized `hashValue`
 	/// - Parameter other: `Hashable` instance
 	/// - Returns: `hashValue` of `self` combined with `other`
@@ -32,7 +32,7 @@ extension Hashable {
 }
 
 extension NSObject {
-	
+
 	/// Swizzles two methods from current Class Object.
 	/// Better to use it in lazy static let
 	///

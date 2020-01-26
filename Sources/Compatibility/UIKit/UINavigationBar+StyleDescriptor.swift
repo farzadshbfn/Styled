@@ -9,7 +9,7 @@ import Foundation
 import class UIKit.UINavigationBar
 
 extension StyleDescriptor where Base: UINavigationBar {
-	
+
 	/// Wrapper for `setBackgroundImage(_:for:barMetrics:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter position: `UIBarPosition`
@@ -20,7 +20,7 @@ extension StyleDescriptor where Base: UINavigationBar {
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: position, barMetrics: barMetrics) } }
 		)
 	}
-	
+
 	/// Wrapper for `setBackgroundImage(_:for:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter barMetrics: `UIBarMetrics`

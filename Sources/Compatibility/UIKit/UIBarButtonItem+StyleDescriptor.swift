@@ -9,7 +9,7 @@ import Foundation
 import class UIKit.UIBarButtonItem
 
 extension StyleDescriptor where Base: UIBarButtonItem {
-	
+
 	/// Wrapper for `setBackgroundImage(_:for:style:barMetrics:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
@@ -21,7 +21,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: state, style: style, barMetrics: barMetrics) } }
 		)
 	}
-	
+
 	/// Wrapper for `setBackgroundImage(_:for:barMetrics:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
@@ -32,7 +32,7 @@ extension StyleDescriptor where Base: UIBarButtonItem {
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: state, barMetrics: barMetrics) } }
 		)
 	}
-	
+
 	/// Wrapper for `setBackButtonBackgroundImage(_:for:barMetrics:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`

@@ -11,7 +11,7 @@ import Foundation
 private var associatedConfig: Int8 = 0
 
 extension StyleDescriptor {
-	
+
 	/// Custom `LocalizedString` used for current Object.
 	///
 	/// - Note: Setting `nil` will make `Styled` listen to `Config.localizedStringSchemeNeedsUpdate`
@@ -21,10 +21,10 @@ extension StyleDescriptor {
 		get { localizedString.customScheme }
 		set { localizedString.customScheme = newValue }
 	}
-	
+
 	/// Calling this method, will update all localizedStrings associated with `styled`
 	public func synchronizeLocalizedStrings() { localizedString.synchronize() }
-	
+
 	/// Will get called when  `Config.localizedStringSchemeNeedsUpdate` is raised or `synchronizeLocalizedString()` is called
 	/// or `customLocalizedStringScheme` is set
 	///
@@ -42,7 +42,7 @@ extension StyleDescriptor {
 		}
 		if shouldSet { update(base) }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with localizedString defined in `localizedStringScheme` for given `LocalizedString`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `localizedStringScheme`
@@ -51,7 +51,7 @@ extension StyleDescriptor {
 		get { localizedString.updates[keyPath]?.item }
 		set { localizedString.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with localizedString defined in `localizedStringScheme` for given `LocalizedString`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `localizedStringScheme`
@@ -60,13 +60,13 @@ extension StyleDescriptor {
 		get { localizedString.updates[keyPath]?.item }
 		set { localizedString.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
-	
+
 	private typealias LocalizedStringConfig = Config.Item<LocalizedString>
-	
+
 	/// Holds Configurations done to LocalizedString instances inside `base`
 	private var localizedString: LocalizedStringConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
-		
+
 		guard let obj = objc_getAssociatedObject(base, &associatedConfig) as? LocalizedStringConfig else {
 			let obj = LocalizedStringConfig(notifName: Config.localizedStringSchemeNeedsUpdate, defaultScheme: Config.localizedStringScheme)
 			objc_setAssociatedObject(base, &associatedConfig, obj, .OBJC_ASSOCIATION_RETAIN)
@@ -74,7 +74,7 @@ extension StyleDescriptor {
 		}
 		return obj
 	}
-	
+
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ localizedString: LocalizedString?, _ apply: @escaping (Base, String?) -> Void) -> LocalizedStringConfig.Update? {
 		guard let localizedString = localizedString else { return nil }

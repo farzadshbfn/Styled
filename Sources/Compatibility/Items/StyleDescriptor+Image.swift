@@ -11,7 +11,7 @@ import Foundation
 private var associatedConfig: Int8 = 0
 
 extension StyleDescriptor {
-	
+
 	/// Custom `ImageScheme` used for current Object.
 	///
 	/// - Note: Setting `nil` will make `Styled` listen to `Config.imageSchemeNeedsUpdate`
@@ -21,10 +21,10 @@ extension StyleDescriptor {
 		get { image.customScheme }
 		set { image.customScheme = newValue }
 	}
-	
+
 	/// Calling this method, will update all images associated with `styled`
 	public func synchronizeImages() { image.synchronize() }
-	
+
 	/// Will get called when  `Config.imageSchemeNeedsUpdate` is raised or `synchronizeImages()` is called or `customImageScheme` is set
 	///
 	/// - Note: Use this method in cases that a specific variable can not be set with `Image` but you need to be aware about it's changes. **Object** will
@@ -41,7 +41,7 @@ extension StyleDescriptor {
 		}
 		if shouldSet { update(base) }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
@@ -50,7 +50,7 @@ extension StyleDescriptor {
 		get { image.updates[keyPath]?.item }
 		set { image.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
@@ -59,7 +59,7 @@ extension StyleDescriptor {
 		get { image.updates[keyPath]?.item }
 		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
@@ -68,7 +68,7 @@ extension StyleDescriptor {
 		get { image.updates[keyPath]?.item }
 		set { image.updates[keyPath] = update(newValue) { ($1?.cgImage).write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
@@ -77,7 +77,7 @@ extension StyleDescriptor {
 		get { image.updates[keyPath]?.item }
 		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
@@ -86,7 +86,7 @@ extension StyleDescriptor {
 		get { image.updates[keyPath]?.item }
 		set { image.updates[keyPath] = update(newValue) { ($1?.ciImage).write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
@@ -95,13 +95,13 @@ extension StyleDescriptor {
 		get { image.updates[keyPath]?.item }
 		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciImage } }
 	}
-	
+
 	private typealias ImageConfig = Config.Item<Image>
-	
+
 	/// Holds Configurations done to Image instances inside `base`
 	private var image: ImageConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
-		
+
 		guard let obj = objc_getAssociatedObject(base, &associatedConfig) as? ImageConfig else {
 			let obj = ImageConfig(notifName: Config.imageSchemeNeedsUpdate, defaultScheme: Config.imageScheme)
 			objc_setAssociatedObject(base, &associatedConfig, obj, .OBJC_ASSOCIATION_RETAIN)
@@ -109,7 +109,7 @@ extension StyleDescriptor {
 		}
 		return obj
 	}
-	
+
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ image: Image?, _ apply: @escaping (Base, UIImage?) -> Void) -> ImageConfig.Update? {
 		guard let image = image else { return nil }

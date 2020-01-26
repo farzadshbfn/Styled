@@ -9,7 +9,7 @@ import Foundation
 import class UIKit.UISegmentedControl
 
 extension StyleDescriptor where Base: UISegmentedControl {
-	
+
 	/// Wrapper for `setImage(_:forSegmentAt:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter index: `Int`
@@ -19,7 +19,7 @@ extension StyleDescriptor where Base: UISegmentedControl {
 			do: image.map { img in { $0.setImage(.styled(img), forSegmentAt: index) } }
 		)
 	}
-	
+
 	/// Wrapper for `setBackgroundImage(_:for:barMetrics:)`
 	/// - Parameter image: `Image` to synchronize with. Passing `nil` will stop synchronization
 	/// - Parameter state: `UIControl.State`
@@ -30,7 +30,7 @@ extension StyleDescriptor where Base: UISegmentedControl {
 			do: image.map { img in { $0.setBackgroundImage(.styled(img), for: state, barMetrics: barMetrics) } }
 		)
 	}
-	
+
 	/// Wrapper for `setTitle(_:forSegmentAt:)`
 	/// - Parameter localizedString: `LocalizedString` to synchronize with. Passing `nil` will stop synchronizatoin
 	/// - Parameter index: `Int`

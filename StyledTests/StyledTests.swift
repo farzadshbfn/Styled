@@ -9,5 +9,4 @@
 import XCTest
 
 class StyledTests: XCTestCase {
-
 }

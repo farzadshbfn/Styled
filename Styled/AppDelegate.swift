@@ -15,10 +15,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	var window: UIWindow?
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-		
+
 		/// Configuring `Styled` to respect device's `UIContentSizeCategory` and update accessibility font sizes
 		Styled.Config.onContentSizeCategoryDidChange { _ in .update }
-		
+
 		/// Configuring `Styled` to respect device's `UIUserInterfaceStyle` and update application with
 		/// a suitable `ColorScheme`
 		if #available(iOS 12.0, *) {
@@ -30,9 +30,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			}
 			Styled.Config.colorScheme = Color.LightScheme()
 		}
-		
+
 		// Make sure to check Colors.swift, Images.swift, Font.swift
-		
+
 		return true
 	}
 }

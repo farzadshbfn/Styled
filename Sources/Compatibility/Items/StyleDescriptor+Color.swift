@@ -11,7 +11,7 @@ import Foundation
 private var associatedConfig: Int8 = 0
 
 extension StyleDescriptor {
-	
+
 	/// Custom `ColorScheme` used for current Object.
 	///
 	/// - Note: Setting `nil` will make `Styled` listen to `Config.colorSchemeNeedsUpdate`
@@ -21,10 +21,10 @@ extension StyleDescriptor {
 		get { color.customScheme }
 		set { color.customScheme = newValue }
 	}
-	
+
 	/// Calling this method, will update all colors associated with `styled`
 	public func synchronizeColors() { color.synchronize() }
-	
+
 	/// Will get called when  `Config.colorSchemeNeedsUpdate` is raised or `synchronizeColors()` is called or `customColorScheme` is set
 	///
 	/// - Note: Use this method in cases that a specific variable can not be set with `Color` but you need to be aware about it's changes. **Object** will
@@ -41,7 +41,7 @@ extension StyleDescriptor {
 		}
 		if shouldSet { update(base) }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
@@ -50,7 +50,7 @@ extension StyleDescriptor {
 		get { color.updates[keyPath]?.item }
 		set { color.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
@@ -59,7 +59,7 @@ extension StyleDescriptor {
 		get { color.updates[keyPath]?.item }
 		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
@@ -68,7 +68,7 @@ extension StyleDescriptor {
 		get { color.updates[keyPath]?.item }
 		set { color.updates[keyPath] = update(newValue) { ($1?.cgColor).write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
@@ -77,7 +77,7 @@ extension StyleDescriptor {
 		get { color.updates[keyPath]?.item }
 		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
@@ -86,7 +86,7 @@ extension StyleDescriptor {
 		get { color.updates[keyPath]?.item }
 		set { color.updates[keyPath] = update(newValue) { ($1?.ciColor).write(to: keyPath, on: $0) } }
 	}
-	
+
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
 	///
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
@@ -95,13 +95,13 @@ extension StyleDescriptor {
 		get { color.updates[keyPath]?.item }
 		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
-	
+
 	private typealias ColorConfig = Config.Item<Color>
-	
+
 	/// Holds Configurations done to Color instances inside `base`
 	private var color: ColorConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
-		
+
 		guard let obj = objc_getAssociatedObject(base, &associatedConfig) as? ColorConfig else {
 			let obj = ColorConfig(notifName: Config.colorSchemeNeedsUpdate, defaultScheme: Config.colorScheme)
 			objc_setAssociatedObject(base, &associatedConfig, obj, .OBJC_ASSOCIATION_RETAIN)
@@ -109,7 +109,7 @@ extension StyleDescriptor {
 		}
 		return obj
 	}
-	
+
 	/// Internal `update` method which generates `Styled.Update` and applies the update once.
 	private func update(_ color: Color?, _ apply: @escaping (Base, UIColor?) -> Void) -> ColorConfig.Update? {
 		guard let color = color else { return nil }

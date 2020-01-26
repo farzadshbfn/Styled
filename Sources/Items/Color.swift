@@ -8,7 +8,7 @@
 import Foundation
 import class UIKit.UIColor
 
-// MARK:- Color
+// MARK: - Color
 /// Used to fetch color on runtime based on current `ColorScheme`
 ///
 /// - Important: It's important to follow **dot.case** syntax while defining name of colors. e.g `primary`, `primary.lvl1`
@@ -49,14 +49,14 @@ import class UIKit.UIColor
 public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiteral {
 	/// A type that represents a `Color` name
 	public typealias StringLiteralType = String
-	
+
 	/// Allows pattern-matching operator (`~=`) to match `value` with `pattern` if `pattern` is prefix of `value`
 	/// E.g: `primary.lvl1` can be matched with `primary`
 	public static var isPrefixMatchingEnabled: Bool = true
-	
+
 	/// This type is used internally to manage transformations if applied to current `Color` before fetching `UIColor`
 	let resolver: Resolver
-	
+
 	/// Name of the `Color`.
 	///
 	/// - Note: This field is optional because there might be transformations applied to this `Color`, hence no specific `name` is available
@@ -66,18 +66,18 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 		default: return nil
 		}
 	}
-	
+
 	/// Initiates a `Color` with given name, to be fetched later
 	///
 	/// - Note: Make sure to follow **dot.case** format for naming Colors
 	///
 	/// - Parameter name: Name of the color.
 	public init(_ name: String) { resolver = .name(name) }
-	
+
 	/// Ease of use on defining `Color` variables
 	/// - Parameter value: `String`
 	public init(stringLiteral value: Self.StringLiteralType) { self.init(value) }
-	
+
 	/// Describes specification of `UIColor` that will be *fetched*/*generated*
 	///
 	///  - Note: If description contains `{...}` it means this `Color` contains transformations
@@ -97,7 +97,7 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 	/// 	Color("primary", bundle: .main)
 	/// 	// description: `{primary(bundle:com.farzadshbfn.styled)}`
 	public var description: String { resolver.description }
-	
+
 	/// Enables the pattern-matcher (i.e switch-statement) to patch `primary.lvl1` with `primary` if `primary.lvl1` is not available
 	/// in the switch-statement
 	/// - Parameter pattern: `Color` to match as prefix of the current value
@@ -112,7 +112,7 @@ public struct Color: Hashable, CustomStringConvertible, ExpressibleByStringLiter
 }
 
 extension Lazy where Item == Color {
-	
+
 	/// Will directly propagate given `UIColor` when needed
 	init(_ uiColor: UIColor) {
 		itemHashValue = uiColor.hashValueCombined(with: "UIColor")
@@ -122,19 +122,19 @@ extension Lazy where Item == Color {
 }
 
 extension Color: Item {
-	
+
 	typealias Scheme = ColorScheme
-	
+
 	typealias Result = UIColor
-	
+
 	/// This type is used to support transformations on `Color` like `.blend`
 	typealias Lazy = Styled.Lazy<Color>
-	
+
 	/// Internal type to manage Lazy or direct fetching of `UIColor`
 	enum Resolver: Hashable, CustomStringConvertible {
 		case name(String)
-		case lazy(Lazy)
-		
+		case lazy (Lazy)
+
 		/// Contains description of current `Resolver` state.
 		///
 		/// - Note: `Lazy` is surrounded by `{...}`
@@ -145,20 +145,19 @@ extension Color: Item {
 			}
 		}
 	}
-	
+
 	/// This method is used internally to manage transformations (if any) and provide `UIColor`
 	/// - Parameter scheme:A `ColorScheme` to fetch `UIColor` from
 	func resolve(from scheme: ColorScheme) -> UIColor? {
 		switch resolver {
 		case .name: return scheme.color(for: self)
-		case .lazy(let lazy): return lazy.item(scheme)
+		case .lazy(let lazy): return lazy .item(scheme)
 		}
 	}
-	
+
 	/// Enables `Color` to accept transformations
 	/// - Parameter lazy: `Lazy` instance
 	init(lazy: Lazy) { resolver = .lazy(lazy) }
-	
 }
 
 /// Hiding `Color` information on reflection
@@ -167,7 +166,7 @@ extension Color: CustomReflectable {
 }
 
 extension Color {
-	
+
 	/// Blends `self`  to the other `Lazy` given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
@@ -182,9 +181,9 @@ extension Color {
 			guard let fromUIColor = self.resolve(from: scheme) else { return to.item(scheme) }
 			guard let toUIColor = to.item(scheme) else { return fromUIColor }
 			return fromUIColor.blend(CGFloat(perc), with: toUIColor)
-			})
+		})
 	}
-	
+
 	/// Blends `self` to the other `Color` given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
@@ -193,7 +192,7 @@ extension Color {
 	/// - Parameter to: Targeted `Color`
 	/// - Returns: `from * perc + to * (1 - perc)`
 	public func blend(_ perc: Double = 0.5, with to: Color) -> Color { blend(perc, .init(to)) }
-	
+
 	/// Blends `self` to the other `UIColor` given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
@@ -202,7 +201,7 @@ extension Color {
 	/// - Parameter to: Targeted `UIColor`
 	/// - Returns: `from * perc + to * (1 - perc)`
 	public func blend(_ perc: Double = 0.5, with to: UIColor) -> Color { blend(perc, .init(to)) }
-	
+
 	/// Blends two `Color`s together with the amount given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
@@ -212,7 +211,7 @@ extension Color {
 	/// - Parameter to: Targeted `Color`
 	/// - Returns: `from * perc + to * (1 - perc)`
 	public static func blending(_ from: Color, _ perc: Double = 0.5, with to: Color) -> Color { from.blend(perc, with: to) }
-	
+
 	/// Blends a `Color` and `UIColor` together with the amount given
 	///
 	/// - Note: Colors will not be blended, if any of them provide `nil`
@@ -221,17 +220,17 @@ extension Color {
 	/// - Parameter perc: Amount to pour from `self`. will be clamped to `[`**0.0**, **1.0**`]`
 	/// - Parameter to: Targeted `UIColor`
 	/// - Returns: `from * perc + to * (1 - perc)`
-	public static func blending(_ from: Color, _ perc: Double = 0.5, with to: UIColor) -> Color { from .blend(perc, with: to) }
-	
+	public static func blending(_ from: Color, _ perc: Double = 0.5, with to: UIColor) -> Color { from.blend(perc, with: to) }
+
 	/// Set's `opacity` level
 	/// - Parameter perc: will be clamped to `[`**0.0**, **1.0**`]`
 	/// - Returns: new instance of `self` with given `opacity`
 	public func opacity(_ perc: Double) -> Color {
 		return .init(lazy: .init(name: "\(self)(\(String(format: "%.2f", perc)))") { scheme in
 			self.resolve(from: scheme)?.withAlphaComponent(CGFloat(perc))
-			})
+		})
 	}
-	
+
 	/// Set's `opacity` level of the given `color`
 	/// - Parameter perc: will be clamped to `[`**0.0**, **1.0**`]`
 	/// - Parameter color: `Color`
@@ -239,7 +238,7 @@ extension Color {
 	public static func opacity(_ perc: Double, of color: Color) -> Color { color.opacity(perc) }
 }
 
-// MARK:- ColorScheme
+// MARK: - ColorScheme
 /// Use this protocol to provide `UIColor` for `Styled`
 ///
 /// Sample:
@@ -254,7 +253,7 @@ extension Color {
 /// 	    }
 /// 	}
 public protocol ColorScheme {
-	
+
 	/// `StyleDescriptor` will use this method to fetch `UIColor`
 	///
 	/// - Important: **Do not** call this method directly. use `UIColor.styled(_:)` instead.
@@ -281,7 +280,7 @@ public protocol ColorScheme {
 }
 
 extension Color {
-	
+
 	/// Will fetch `Color`s from Assets Catalog
 	///
 	/// - Note: if `Color.isPrefixMatchingEnabled` is `true`, in case of failure at loading `a.b.c.d`
@@ -292,22 +291,22 @@ extension Color {
 	/// - SeeAlso: Color(_:bundle:)
 	@available(iOS 11, *)
 	public struct DefaultScheme: ColorScheme {
-		
-		public init() { }
-		
+
+		public init() {}
+
 		public func color(for color: Color) -> UIColor? { .named(color.name!, in: nil) }
 	}
-	
+
 	/// Will return `nil` for all `Color`s
 	///
 	/// - Important: It's recommended to use `NoScheme` when using `.init(_:bundle:)` version of `Color`
 	public struct NoScheme: ColorScheme {
-		
-		public init() { }
-		
+
+		public init() {}
+
 		public func color(for color: Color) -> UIColor? { nil }
 	}
-	
+
 	/// Fetches `UIColor` from ColorAsset defined in given `Bundle`
 	///
 	/// - Note: `Color`s initialized with this initializer, will not be sent **directly** to `ColorScheme`. In `ColorScheme`
@@ -320,20 +319,20 @@ extension Color {
 	public init(_ name: String, bundle: Bundle) {
 		resolver = .lazy(.init(name: "\(name)(bundle:\(bundle.bundleIdentifier ?? ""))") {
 			$0.color(for: .init(name)) ?? UIColor.named(name, in: bundle)
-			})
+		})
 	}
 }
 
 // MARK: UIColor+Extensions
 extension UIColor {
-	
+
 	/// Will fetch `UIColor` defined in given `ColorScheme`
 	/// - Parameter color: `Color`
 	/// - Parameter scheme: `ColorScheme` to search for color. (default: `Config.colorScheme`)
 	open class func styled(_ color: Color, from scheme: ColorScheme = Config.colorScheme) -> UIColor? {
 		color.resolve(from: scheme)
 	}
-	
+
 	/// Blends current color with the other one.
 	///
 	/// - Important: `perc` **1.0** means to omit other color while `perc` **0.0** means to omit current color
@@ -344,18 +343,18 @@ extension UIColor {
 		let perc = min(max(0.0, perc), 1.0)
 		var col1 = (r: 0.0 as CGFloat, g: 0.0 as CGFloat, b: 0.0 as CGFloat, a: 0.0 as CGFloat)
 		var col2 = (r: 0.0 as CGFloat, g: 0.0 as CGFloat, b: 0.0 as CGFloat, a: 0.0 as CGFloat)
-		
+
 		self.getRed(&col1.r, green: &col1.g, blue: &col1.b, alpha: &col1.a)
 		color.getRed(&col2.r, green: &col2.g, blue: &col2.b, alpha: &col2.a)
-		
+
 		let percComp = 1 - perc
-		
-		return UIColor(red:   col1.r * perc + col2.r * percComp,
-					   green: col1.g * perc + col2.g * percComp,
-					   blue:  col1.b * perc + col2.b * percComp,
-					   alpha: col1.a * perc + col2.a * percComp)
+
+		return UIColor(red: col1.r * perc + col2.r * percComp,
+		               green: col1.g * perc + col2.g * percComp,
+		               blue: col1.b * perc + col2.b * percComp,
+		               alpha: col1.a * perc + col2.a * percComp)
 	}
-	
+
 	/// Will look in the Assets catalog in given `Bundle` for the given color
 	///
 	/// - Note: if `Color.isPrefixMatchingEnabled` is `true` will try all possbile variations
