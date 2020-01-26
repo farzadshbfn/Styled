@@ -78,7 +78,7 @@ view.sd.customColor = .red
 view.sd.customColor = .blending(.red, with: .black) // Darkened red
 ```
 
-Just by writing `view.sd.someColor` Styled will gaurantee that everytime the `ColorScheme` changes, your `someColor` variable will get updated with the latest value associated to the `Color.red`.
+Just by writing `view.sd.someColor` Styled will gaurantee that everytime the `ColorScheme` changes, your `someColor` variable will get updated with the latest value associated to the `Color` assigned.
 
 This is how you define `Color`s:
 
