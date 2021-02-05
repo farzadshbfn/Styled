@@ -63,7 +63,7 @@ This is how you'll be using Styled in a nutshell:
 
 ```swift
 class CustomView: UIView {
-    var customColor: UIColor { didSet { ... } }
+    var customColor: UIColor { didSet { /* Update UI Accordingly */ } }
 }
 
 let view = CustomView()
@@ -78,7 +78,7 @@ view.sd.customColor = .red
 view.sd.customColor = .blending(.red, with: .black) // Darkened red
 ```
 
-Just by writing `view.sd.someColor` Styled will gaurantee that everytime the `ColorScheme` changes, your `someColor` variable will get updated with the latest value associated to the `Color` assigned.
+Just by writing `view.sd.customColor` Styled will gaurantee that everytime the `ColorScheme` changes, your `customColor` variable will get updated with the latest value associated to the `Color` assigned.
 
 This is how you define `Color`s:
 
