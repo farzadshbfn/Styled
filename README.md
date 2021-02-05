@@ -78,7 +78,9 @@ view.sd.customColor = .red
 view.sd.customColor = .blending(.red, with: .black) // Darkened red
 ```
 
-Just by writing `view.sd.customColor` Styled will gaurantee that everytime the `ColorScheme` changes, your `customColor` variable will get updated with the latest value associated to the `Color` assigned.
+Just by writing `view.sd.customColor` Styled will gaurantee that everytime the `ColorScheme` changes, your `customColor` will get updated accordingly in the background, So you no longer need to worry about choosing the correct color or updating your UI everytime user changes accessibility options (Dark mode, font size, High contrast, etc).
+
+---
 
 This is how you define `Color`s:
 
