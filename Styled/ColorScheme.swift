@@ -33,11 +33,8 @@ extension Color {
 			case .gold: return #colorLiteral(red: 1, green: 0.7618049603, blue: 0.01506529563, alpha: 1)
 
 			default:
-				#if DEBUG
-					fatalError("Unknown Color detected. \(color)")
-				#else
-					return nil
-				#endif
+				assertionFailure("Unknown Color detected. \(color)")
+				return nil
 			}
 		}
 	}
@@ -66,11 +63,8 @@ extension Color {
 			case .gold: return #colorLiteral(red: 0.9513531983, green: 0.7247455855, blue: 0.01433241718, alpha: 1)
 
 			default:
-				#if DEBUG
-					fatalError("Unknown Color detected. \(color)")
-				#else
-					return nil
-				#endif
+				assertionFailure("Unknown Color detected. \(color)")
+				return nil
 			}
 		}
 	}
