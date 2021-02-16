@@ -6,6 +6,8 @@
 
 Styled is a Type-Safe accessibility & theme management library in Swift.
 
+<img src="https://raw.githubusercontent.com/farzadshbfn/Styled/master/Light.png" width="320"><img src="https://raw.githubusercontent.com/farzadshbfn/Styled/master/Dark.png" width="320">
+
 * [Features](#Features)
 * [Requirements](#Requirements)
 * [Installation](#Installation)
