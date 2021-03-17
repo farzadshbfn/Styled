@@ -18,12 +18,12 @@ extension StyleDescriptor {
 	/// - Note: Setting custom `ColorScheme` will stop listening to `Config.colorSchemeNeedsUpdate` and
 	/// updates colors with given `ColorScheme`
 	public var customColorScheme: ColorScheme? {
-		get { color.customScheme }
-		set { color.customScheme = newValue }
+		get { config.customScheme }
+		set { config.customScheme = newValue }
 	}
 
 	/// Calling this method, will update all colors associated with `styled`
-	public func synchronizeColors() { color.synchronize() }
+	public func synchronizeColors() { config.synchronize() }
 
 	/// Will get called when  `Config.colorSchemeNeedsUpdate` is raised or `synchronizeColors()` is called or `customColorScheme` is set
 	///
@@ -34,8 +34,8 @@ extension StyleDescriptor {
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
 	public func onColorSchemeUpdate(withId id: String = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return color.updates[id] = nil }
-		color.updates[id] = { [weak base] in
+		guard let update = update else { return config.updates[id] = nil }
+		config.updates[id] = { [weak base] in
 			guard let base = base else { return }
 			update(base)
 		}
@@ -47,8 +47,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor>) -> Color? {
-		get { color.updates[keyPath]?.item }
-		set { color.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -56,8 +56,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIColor?>) -> Color? {
-		get { color.updates[keyPath]?.item }
-		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -65,8 +65,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor>) -> Color? {
-		get { color.updates[keyPath]?.item }
-		set { color.updates[keyPath] = update(newValue) { ($1?.cgColor).write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { ($1?.cgColor).write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -74,8 +74,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGColor?>) -> Color? {
-		get { color.updates[keyPath]?.item }
-		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgColor } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -83,8 +83,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor>) -> Color? {
-		get { color.updates[keyPath]?.item }
-		set { color.updates[keyPath] = update(newValue) { ($1?.ciColor).write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { ($1?.ciColor).write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with color defined in `colorScheme` for given `Color`.
@@ -92,14 +92,14 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `colorScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIColor?>) -> Color? {
-		get { color.updates[keyPath]?.item }
-		set { color.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciColor } }
 	}
 
 	private typealias ColorConfig = Config.Item<Color>
 
 	/// Holds Configurations done to Color instances inside `base`
-	private var color: ColorConfig {
+	private var config: ColorConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
 
 		guard let obj = objc_getAssociatedObject(base, &associatedConfig) as? ColorConfig else {
@@ -117,7 +117,7 @@ extension StyleDescriptor {
 			guard let base = base else { return () }
 			apply(base, color.resolve(from: scheme))
 		}
-		styledUpdate.synchronize(withScheme: self.color.scheme)
+		styledUpdate.synchronize(withScheme: self.config.scheme)
 		return styledUpdate
 	}
 }

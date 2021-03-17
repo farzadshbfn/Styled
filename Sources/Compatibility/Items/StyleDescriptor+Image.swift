@@ -18,12 +18,12 @@ extension StyleDescriptor {
 	/// - Note: Setting custom `ImageScheme` will stop listening to `Config.imageSchemeNeedsUpdate` and
 	/// updates images with given `ImageScheme`
 	public var customImageScheme: ImageScheme? {
-		get { image.customScheme }
-		set { image.customScheme = newValue }
+		get { config.customScheme }
+		set { config.customScheme = newValue }
 	}
 
 	/// Calling this method, will update all images associated with `styled`
-	public func synchronizeImages() { image.synchronize() }
+	public func synchronizeImages() { config.synchronize() }
 
 	/// Will get called when  `Config.imageSchemeNeedsUpdate` is raised or `synchronizeImages()` is called or `customImageScheme` is set
 	///
@@ -34,8 +34,8 @@ extension StyleDescriptor {
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
 	public func onImageSchemeUpdate(withId id: String = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return image.updates[id] = nil }
-		image.updates[id] = { [weak base] in
+		guard let update = update else { return config.updates[id] = nil }
+		config.updates[id] = { [weak base] in
 			guard let base = base else { return }
 			update(base)
 		}
@@ -47,8 +47,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage>) -> Image? {
-		get { image.updates[keyPath]?.item }
-		set { image.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -56,8 +56,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIImage?>) -> Image? {
-		get { image.updates[keyPath]?.item }
-		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -65,8 +65,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage>) -> Image? {
-		get { image.updates[keyPath]?.item }
-		set { image.updates[keyPath] = update(newValue) { ($1?.cgImage).write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { ($1?.cgImage).write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -74,8 +74,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CGImage?>) -> Image? {
-		get { image.updates[keyPath]?.item }
-		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.cgImage } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -83,8 +83,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage>) -> Image? {
-		get { image.updates[keyPath]?.item }
-		set { image.updates[keyPath] = update(newValue) { ($1?.ciImage).write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { ($1?.ciImage).write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with image defined in `imageScheme` for given `Image`.
@@ -92,14 +92,14 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `imageScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, CIImage?>) -> Image? {
-		get { image.updates[keyPath]?.item }
-		set { image.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciImage } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1?.ciImage } }
 	}
 
 	private typealias ImageConfig = Config.Item<Image>
 
 	/// Holds Configurations done to Image instances inside `base`
-	private var image: ImageConfig {
+	private var config: ImageConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
 
 		guard let obj = objc_getAssociatedObject(base, &associatedConfig) as? ImageConfig else {
@@ -117,7 +117,7 @@ extension StyleDescriptor {
 			guard let base = base else { return () }
 			return apply(base, image.resolve(from: scheme))
 		}
-		styledUpdate.synchronize(withScheme: self.image.scheme)
+		styledUpdate.synchronize(withScheme: self.config.scheme)
 		return styledUpdate
 	}
 }

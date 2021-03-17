@@ -18,12 +18,12 @@ extension StyleDescriptor {
 	/// - Note: Setting custom `LocalizedStringScheme` will stop listening to `Config.localizedStringSchemeNeedsUpdate` and
 	/// updates colors with given `LocalizedStringScheme`
 	public var customLocalizedStringScheme: LocalizedStringScheme? {
-		get { localizedString.customScheme }
-		set { localizedString.customScheme = newValue }
+		get { config.customScheme }
+		set { config.customScheme = newValue }
 	}
 
 	/// Calling this method, will update all localizedStrings associated with `styled`
-	public func synchronizeLocalizedStrings() { localizedString.synchronize() }
+	public func synchronizeLocalizedStrings() { config.synchronize() }
 
 	/// Will get called when  `Config.localizedStringSchemeNeedsUpdate` is raised or `synchronizeLocalizedString()` is called
 	/// or `customLocalizedStringScheme` is set
@@ -35,8 +35,8 @@ extension StyleDescriptor {
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
 	public func onLocalizedStringSchemeUpdate(withId id: String = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return localizedString.updates[id] = nil }
-		localizedString.updates[id] = { [weak base] in
+		guard let update = update else { return config.updates[id] = nil }
+		config.updates[id] = { [weak base] in
 			guard let base = base else { return }
 			update(base)
 		}
@@ -48,8 +48,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `localizedStringScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, String>) -> LocalizedString? {
-		get { localizedString.updates[keyPath]?.item }
-		set { localizedString.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $1.write(to: keyPath, on: $0) } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with localizedString defined in `localizedStringScheme` for given `LocalizedString`.
@@ -57,14 +57,14 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `localizedStringScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, String?>) -> LocalizedString? {
-		get { localizedString.updates[keyPath]?.item }
-		set { localizedString.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 
 	private typealias LocalizedStringConfig = Config.Item<LocalizedString>
 
 	/// Holds Configurations done to LocalizedString instances inside `base`
-	private var localizedString: LocalizedStringConfig {
+	private var config: LocalizedStringConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
 
 		guard let obj = objc_getAssociatedObject(base, &associatedConfig) as? LocalizedStringConfig else {
@@ -82,7 +82,7 @@ extension StyleDescriptor {
 			guard let base = base else { return () }
 			return apply(base, localizedString.resolve(from: scheme))
 		}
-		styledUpdate.synchronize(withScheme: self.localizedString.scheme)
+		styledUpdate.synchronize(withScheme: self.config.scheme)
 		return styledUpdate
 	}
 }

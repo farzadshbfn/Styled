@@ -18,12 +18,12 @@ extension StyleDescriptor {
 	/// - Note: Setting custom `FontScheme` will stop listening to `Config.fontSchemeNeedsUpdate` and
 	/// updates fonts with given `FontScheme`
 	public var customFontScheme: FontScheme? {
-		get { font.customScheme }
-		set { font.customScheme = newValue }
+		get { config.customScheme }
+		set { config.customScheme = newValue }
 	}
 
 	/// Calling this method, will update all fonts associated with `styled`
-	public func synchronizeFonts() { font.synchronize() }
+	public func synchronizeFonts() { config.synchronize() }
 
 	/// Will get called when  `Config.fontSchemeNeedsUpdate` is raised or `synchronizeFonts()` is called or `customFontScheme` is set
 	///
@@ -34,8 +34,8 @@ extension StyleDescriptor {
 	/// - Parameter shouldSet: `false` means `update` will not get called when the method gets called and only triggers when `styled` decides to.
 	/// - Parameter update: Setting `nil` will stop updating for given `id`
 	public func onFontSchemeUpdate(withId id: String = UUID().uuidString, shouldSet: Bool = true, do update: ((Base) -> Void)?) {
-		guard let update = update else { return font.updates[id] = nil }
-		font.updates[id] = { [weak base] in
+		guard let update = update else { return config.updates[id] = nil }
+		config.updates[id] = { [weak base] in
 			guard let base = base else { return }
 			update(base)
 		}
@@ -47,8 +47,8 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont>) -> Font? {
-		get { font.updates[keyPath]?.item }
-		set { font.updates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates[keyPath] = update(newValue) { $1 != nil ? $0[keyPath: keyPath] = $1! : () } }
 	}
 
 	/// Using this method, given `KeyPath` will keep in sync with font defined in `fontScheme` for given `Font`.
@@ -56,14 +56,14 @@ extension StyleDescriptor {
 	/// - Note: Setting `nil` will stop syncing `KeyPath` with `fontScheme`
 	///
 	public subscript(dynamicMember keyPath: ReferenceWritableKeyPath<Base, UIFont?>) -> Font? {
-		get { font.updates[keyPath]?.item }
-		set { font.updates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
+		get { config.updates[keyPath]?.item }
+		set { config.updates.keyPaths[keyPath] = update(newValue) { $0[keyPath: keyPath] = $1 } }
 	}
 
 	private typealias FontConfig = Config.Item<Font>
 
 	/// Holds Configurations done to Font instances inside `base`
-	private var font: FontConfig {
+	private var config: FontConfig {
 		objc_sync_enter(base); defer { objc_sync_exit(base) }
 
 		guard let obj = objc_getAssociatedObject(base, &associatedFontConfig) as? FontConfig else {
@@ -81,7 +81,7 @@ extension StyleDescriptor {
 			guard let base = base else { return () }
 			return apply(base, font.resolve(from: scheme))
 		}
-		styledUpdate.synchronize(withScheme: self.font.scheme)
+		styledUpdate.synchronize(withScheme: self.config.scheme)
 		return styledUpdate
 	}
 }
